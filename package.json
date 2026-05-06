@@ -1,0 +1,25 @@
+{
+  "name": "asprisawi-discord-music-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A Discord slash-command music bot powered by discord-player.",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "register": "node src/deploy-commands.js",
+    "check": "node scripts/check-syntax.js"
+  },
+  "dependencies": {
+    "@discord-player/extractor": "^7.2.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@snazzah/davey": "^0.1.11",
+    "discord-player": "^7.2.0",
+    "discord-player-youtube": "^0.8.4",
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.2.3"
+  },
+  "packageManager": "pnpm@10.33.3+sha512.a19744364a7e248b92657a4ca5973f9354d21caf982579674b1c539f32c7420c47138ad8b1254df07aba9bc782d9b3029e3db34d5dbff974326eb74dac8ff489"
+}
