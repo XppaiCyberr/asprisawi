@@ -42,6 +42,7 @@ npm start
 - `/stop` stops playback and leaves voice.
 
 Bot messages suppress link embeds, so YouTube and playlist URLs do not expand into large web previews.
+While playback is active, the bot presence shows the current track and requester.
 
 Examples:
 
