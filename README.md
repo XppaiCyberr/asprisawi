@@ -9,7 +9,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Autoplay uses related recommendations and filters duplicate song titles from other channels/uploads.
 - Shows presence with bot uptime, and adds the current track, artist, and requester while music is active.
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
-- Edits one playback status message instead of posting separate queued and now-playing messages for the same request.
+- Edits a track's queued status into now-playing, then posts a new message for each new track so chat keeps playback history.
 - Auto-leaves when playback ends or the voice channel is empty.
 - Uses bundled `@ffmpeg-installer/ffmpeg` by default.
 - Cleans stale slash commands from older deployments when registering guild commands.

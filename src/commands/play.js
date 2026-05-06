@@ -33,11 +33,14 @@ export async function execute(interaction) {
   try {
     const result = await player.play(voice.voiceChannel, query, {
       requestedBy: interaction.user,
+      afterSearch: (searchResult) => {
+        setTrackPlaybackStatus(searchResult.tracks?.[0], playbackStatus);
+        return searchResult;
+      },
       nodeOptions: {
         metadata: {
           textChannel: interaction.channel,
-          requestedBy: interaction.user,
-          playbackStatus
+          requestedBy: interaction.user
         },
         bufferingTimeout: 15000,
         leaveOnStop: true,
@@ -56,9 +59,9 @@ export async function execute(interaction) {
 
     setQueueMetadata(result.queue, {
       textChannel: interaction.channel,
-      requestedBy: interaction.user,
-      playbackStatus
+      requestedBy: interaction.user
     });
+    setTrackPlaybackStatus(result.track, playbackStatus);
 
     if (playbackStatus.state !== 'playing') {
       await playbackStatus.update(playResultMessage(result), 'queued');
@@ -77,6 +80,21 @@ function setQueueMetadata(queue, metadata) {
   queue.setMetadata({
     ...current,
     ...metadata
+  });
+}
+
+function setTrackPlaybackStatus(track, playbackStatus) {
+  if (!track) {
+    return;
+  }
+
+  const metadata = track.metadata && typeof track.metadata === 'object'
+    ? track.metadata
+    : {};
+
+  track.setMetadata({
+    ...metadata,
+    playbackStatus
   });
 }
 
