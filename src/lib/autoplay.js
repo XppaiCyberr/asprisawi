@@ -23,8 +23,7 @@ export async function chooseAutoplayTrack(queue, tracks) {
 
   const fallbackTracks = await searchArtistRadio(queue);
   return chooseFromCandidates(queue, fallbackTracks)
-    ?? chooseLooseFallback(queue, fallbackTracks)
-    ?? chooseLooseFallback(queue, tracks);
+    ?? chooseLooseFallback(queue, fallbackTracks);
 }
 
 function chooseFromCandidates(queue, tracks = []) {
@@ -41,6 +40,10 @@ function chooseFromCandidates(queue, tracks = []) {
       .flatMap((track) => [...normalizedSongKeys(track)])
       .filter((key) => key.length > 0)
   );
+  const knownSongs = knownTracks.map((track) => ({
+    authorKey: normalizeComparableText(cleanAuthorName(track.author)),
+    titleKeys: [...normalizedSongKeys(track)]
+  }));
   const seed = getSeedTrack(queue);
   const seedAuthor = normalizeComparableText(cleanAuthorName(seed?.author));
   const seedVariantWords = variantWords(cleanTrackTitle(seed));
@@ -50,6 +53,7 @@ function chooseFromCandidates(queue, tracks = []) {
       track,
       score: scoreCandidate(track, index, {
         knownTitles,
+        knownSongs,
         knownUrls,
         seedAuthor,
         seedVariantWords
@@ -73,9 +77,15 @@ function chooseLooseFallback(queue, tracks = []) {
       .map((track) => track.url)
       .filter(Boolean)
   );
+  const knownSongs = getKnownTracks(queue).map((track) => ({
+    authorKey: normalizeComparableText(cleanAuthorName(track.author)),
+    titleKeys: [...normalizedSongKeys(track)]
+  }));
 
-  return candidates.find((track) => track.url && !knownUrls.has(track.url))
-    ?? candidates[0];
+  return candidates.find((track) => track.url && !knownUrls.has(track.url) && !isKnownSong(track, {
+    knownSongs,
+    knownTitles: new Set(knownSongs.flatMap((song) => song.titleKeys))
+  })) ?? null;
 }
 
 function scoreCandidate(track, index, context) {
@@ -84,7 +94,7 @@ function scoreCandidate(track, index, context) {
   if (
     titleKeys.length === 0
     || context.knownUrls.has(track.url)
-    || titleKeys.some((key) => context.knownTitles.has(key))
+    || isKnownSong(track, context)
   ) {
     return Number.NEGATIVE_INFINITY;
   }
@@ -126,27 +136,72 @@ async function searchArtistRadio(queue) {
   const seed = getSeedTrack(queue);
   const author = cleanAuthorName(seed?.author);
   const title = cleanTrackTitle(seed);
-  const query = author ? `${author} radio songs` : `${title} similar songs`;
+  const queries = [
+    author ? `${author} radio songs` : null,
+    author ? `${author} similar songs` : null,
+    title ? `${title} similar songs` : null
+  ].filter(Boolean);
 
-  if (!query.trim()) {
+  if (queries.length === 0) {
     return [];
   }
 
-  try {
-    const result = await queue.player.search(query, {
-      requestedBy: seed?.requestedBy ?? undefined,
-      searchEngine: QueryType.YOUTUBE_SEARCH
-    });
+  const tracks = [];
 
-    return result.tracks ?? [];
-  } catch (error) {
-    console.error('Autoplay fallback search failed:', error);
-    return [];
+  for (const query of queries) {
+    try {
+      const result = await queue.player.search(query, {
+        requestedBy: seed?.requestedBy ?? undefined,
+        searchEngine: QueryType.YOUTUBE_SEARCH
+      });
+
+      tracks.push(...result.tracks ?? []);
+    } catch (error) {
+      console.error(`Autoplay fallback search failed for "${query}":`, error);
+    }
   }
+
+  return tracks;
 }
 
 function variantWords(value) {
   const text = normalizeComparableText(value);
 
   return new Set(LOW_PRIORITY_VARIANTS.filter((word) => text.includes(word)));
+}
+
+function isKnownSong(track, context) {
+  const titleKeys = [...normalizedSongKeys(track)];
+
+  if (titleKeys.some((key) => context.knownTitles.has(key))) {
+    return true;
+  }
+
+  const authorKey = normalizeComparableText(cleanAuthorName(track.author));
+
+  return context.knownSongs.some((knownSong) =>
+    sameArtist(authorKey, knownSong.authorKey)
+    && titleKeys.some((key) => knownSong.titleKeys.some((knownKey) => sameSongTitle(key, knownKey)))
+  );
+}
+
+function sameArtist(authorKey, knownAuthorKey) {
+  return Boolean(authorKey && knownAuthorKey)
+    && (authorKey === knownAuthorKey || authorKey.includes(knownAuthorKey) || knownAuthorKey.includes(authorKey));
+}
+
+function sameSongTitle(titleKey, knownTitleKey) {
+  if (!titleKey || !knownTitleKey) {
+    return false;
+  }
+
+  if (titleKey === knownTitleKey) {
+    return true;
+  }
+
+  const shorter = titleKey.length < knownTitleKey.length ? titleKey : knownTitleKey;
+  const longer = titleKey.length < knownTitleKey.length ? knownTitleKey : titleKey;
+  const tokenCount = shorter.split(' ').filter(Boolean).length;
+
+  return tokenCount >= 3 && longer.includes(shorter);
 }

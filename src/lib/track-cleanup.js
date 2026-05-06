@@ -36,8 +36,11 @@ export function normalizedSongKeys(track) {
 
 export function normalizeComparableText(value) {
   return removeVideoNoise(plainText(value))
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/\b(official|music|video|audio|lyrics?|lyric|visualizer|hd|hq|mv)\b/g, ' ')
+    .replace(/[\u2018\u2019\u201b\u2032']/g, '')
+    .replace(/\b(official|music|video|audio|lyrics?|lyric|visualizer|amv|mv|clip|hd|hq|4k)\b/g, ' ')
     .replace(/[^\p{Letter}\p{Number}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -69,9 +72,7 @@ function stripAuthorSuffix(title, author) {
 
 function removeVideoNoise(value) {
   return value
-    .replace(/\s*[\[(](official\s+)?(music\s+)?(lyric\s+)?video[\])]/gi, '')
-    .replace(/\s*[\[(]official\s+audio[\])]/gi, '')
-    .replace(/\s*[\[(]lyrics?[\])]/gi, '')
+    .replace(/\s*[\[(][^\])]*(official|music\s+video|lyric|lyrics|audio|visualizer|amv|mv)[^\])]*[\])]/gi, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
