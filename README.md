@@ -6,6 +6,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 
 - Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
 - Supports YouTube URLs/searches, YouTube Music URLs, playlists, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
+- Autoplay uses related recommendations and filters duplicate song titles from other channels/uploads.
 - Shows presence with bot uptime, and adds the current track, artist, and requester while music is active.
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
 - Edits one playback status message instead of posting separate queued and now-playing messages for the same request.

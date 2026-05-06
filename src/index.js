@@ -3,9 +3,11 @@ import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import { ActivityType, Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { Player } from 'discord-player';
 import { DefaultExtractors } from '@discord-player/extractor';
+import { chooseAutoplayTrack } from './lib/autoplay.js';
 import { loadCommands } from './lib/command-loader.js';
 import { respond, suppressEmbeds } from './lib/replies.js';
-import { trackMarkdown, trackTitle } from './lib/format.js';
+import { trackMarkdown } from './lib/format.js';
+import { cleanAuthorName, cleanTrackTitle, plainText } from './lib/track-cleanup.js';
 
 dotenv.config({ quiet: true });
 
@@ -83,6 +85,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
 player.events.on('playerStart', async (queue, track) => {
   setActiveTrack(queue, track);
   await updatePlaybackMessage(queue, `Now playing: ${trackMarkdown(track)}`, 'playing');
+});
+
+player.events.on('willAutoPlay', async (queue, tracks, done) => {
+  try {
+    done(await chooseAutoplayTrack(queue, tracks));
+  } catch (error) {
+    console.error('Autoplay selection failed:', error);
+    done(null);
+  }
 });
 
 player.events.on('playerSkip', async (queue, track) => {
@@ -225,27 +236,10 @@ function presenceState(track) {
   return truncateWithSuffix(text, uptime, 128);
 }
 
-function cleanTrackTitle(track) {
-  const title = removeVideoNoise(plainText(trackTitle(track)));
-  const author = cleanAuthorName(track.author);
-
-  if (!author) {
-    return title;
-  }
-
-  return stripAuthorPrefix(title, author);
-}
-
 function requesterName(track) {
   const user = track.requestedBy;
 
   return plainText(user?.globalName ?? user?.username ?? 'autoplay');
-}
-
-function plainText(value) {
-  return String(value)
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function truncatePresence(value, limit) {
@@ -292,32 +286,6 @@ function formatUptime() {
   }
 
   return `${seconds}s`;
-}
-
-function stripAuthorPrefix(title, author) {
-  for (const separator of [' - ', ' \u2013 ', ' \u2014 ', ' | ', ': ']) {
-    const prefix = `${author}${separator}`;
-
-    if (title.toLowerCase().startsWith(prefix.toLowerCase())) {
-      return title.slice(prefix.length).trim();
-    }
-  }
-
-  return title;
-}
-
-function cleanAuthorName(author) {
-  return removeVideoNoise(plainText(author ?? ''))
-    .replace(/\s+-\s+topic$/i, '')
-    .trim();
-}
-
-function removeVideoNoise(value) {
-  return value
-    .replace(/\s*[\[(](official\s+)?(music\s+)?(lyric\s+)?video[\])]/gi, '')
-    .replace(/\s*[\[(]lyrics?[\])]/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function playbackErrorMessage(error) {
