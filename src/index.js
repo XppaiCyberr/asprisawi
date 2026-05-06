@@ -8,6 +8,7 @@ import { loadCommands } from './lib/command-loader.js';
 import { respond, suppressEmbeds } from './lib/replies.js';
 import { trackMarkdown } from './lib/format.js';
 import { cleanAuthorName, cleanTrackTitle, plainText } from './lib/track-cleanup.js';
+import { SpotifyAwareYoutubeExtractor } from './lib/youtube-extractor.js';
 
 dotenv.config({ quiet: true });
 
@@ -33,8 +34,7 @@ const startedAt = Date.now();
 
 const player = new Player(client);
 process.env.DOTENV_CONFIG_QUIET ??= 'true';
-const { YoutubeExtractor } = await import('discord-player-youtube');
-await player.extractors.register(YoutubeExtractor, {
+await player.extractors.register(SpotifyAwareYoutubeExtractor, {
   cookie: process.env.YOUTUBE_COOKIE,
   filterAutoplayTracks: true,
   priority: 2

@@ -3,6 +3,7 @@ import { QueueRepeatMode, useMainPlayer } from 'discord-player';
 import { trackMarkdown } from '../lib/format.js';
 import { isAutoplayEnabled } from '../lib/guild-settings.js';
 import { createPlaybackStatus } from '../lib/playback-status.js';
+import { normalizePlaybackQuery, searchEngineForQuery } from '../lib/query.js';
 import { respond } from '../lib/replies.js';
 import { requirePlayableVoiceChannel } from '../lib/voice.js';
 
@@ -24,7 +25,7 @@ export async function execute(interaction) {
     return;
   }
 
-  const query = normalizeYouTubeUrl(interaction.options.getString('query', true));
+  const query = normalizePlaybackQuery(interaction.options.getString('query', true));
   const player = useMainPlayer();
 
   await interaction.deferReply();
@@ -33,6 +34,7 @@ export async function execute(interaction) {
   try {
     const result = await player.play(voice.voiceChannel, query, {
       requestedBy: interaction.user,
+      searchEngine: searchEngineForQuery(query),
       afterSearch: (searchResult) => {
         setTrackPlaybackStatus(searchResult.tracks?.[0], playbackStatus);
         return searchResult;
@@ -65,7 +67,7 @@ export async function execute(interaction) {
     }
   } catch (error) {
     console.error('Play command failed:', error);
-    await playbackStatus.update('Could not play that request. Try a YouTube URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.', 'error');
+    await playbackStatus.update('Could not play that request. Try a YouTube or Spotify URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.', 'error');
   }
 }
 
@@ -104,20 +106,4 @@ function playResultMessage(result) {
   }
 
   return `Queued: ${trackMarkdown(result.track)}`;
-}
-
-function normalizeYouTubeUrl(query) {
-  try {
-    const url = new URL(query);
-    const hostname = url.hostname.toLowerCase();
-
-    if (hostname === 'music.youtube.com' || hostname === 'm.youtube.com') {
-      url.hostname = 'www.youtube.com';
-      return url.toString();
-    }
-  } catch {
-    return query;
-  }
-
-  return query;
 }

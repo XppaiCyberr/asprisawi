@@ -5,7 +5,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 ## Features
 
 - Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
-- Supports YouTube URLs/searches, YouTube Music URLs, playlists, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
+- Supports YouTube URLs/searches, YouTube Music URLs, Spotify track/album/playlist URLs, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
 - Autoplay uses related recommendations and filters duplicate song titles from other channels/uploads.
 - Shows presence with bot uptime, and adds the current track, artist, and requester while music is active.
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
@@ -224,6 +224,7 @@ Examples:
 ```text
 /play query:https://www.youtube.com/watch?v=VIDEO_ID
 /play query:https://music.youtube.com/watch?v=VIDEO_ID
+/play query:https://open.spotify.com/playlist/PLAYLIST_ID
 /play query:artist song name
 ```
 
@@ -242,6 +243,13 @@ YOUTUBE_COOKIE=your-full-cookie-header
 ```
 
 YouTube playback is unofficial and can be brittle when YouTube changes its clients. Use a throwaway account cookie, not your personal account, and check the source platform's terms before using it beyond private testing.
+
+Spotify links are resolved to metadata and bridged to playable audio through the available streaming extractors. They usually work without credentials, but Spotify API credentials can make metadata fetching more reliable:
+
+```env
+DP_SPOTIFY_CLIENT_ID=your-spotify-client-id
+DP_SPOTIFY_CLIENT_SECRET=your-spotify-client-secret
+```
 
 Enable Discord Player debug logs:
 
