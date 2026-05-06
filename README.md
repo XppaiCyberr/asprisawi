@@ -9,6 +9,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Autoplay uses related recommendations and filters duplicate song titles from other channels/uploads.
 - Shows presence with bot uptime, and adds the current track, artist, and requester while music is active.
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
+- Uses color-coded Discord embeds for bot messages: playing is green, skipped is blue, stopped/errors are red, and queued is amber.
 - Edits a track's queued status into now-playing, then posts a new message for each new track so chat keeps playback history.
 - Stays in the voice channel by default; use `/stop` when you want it to leave.
 - Supports Windows and Ubuntu/Linux. Uses bundled `@ffmpeg-installer/ffmpeg` by default, or system `ffmpeg` when `FFMPEG_PATH` is set.

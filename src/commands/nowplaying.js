@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { useQueue } from 'discord-player';
-import { trackMarkdown } from '../lib/format.js';
+import { statusMessage, trackStatusMessage } from '../lib/embeds.js';
 import { respond } from '../lib/replies.js';
 
 export const data = new SlashCommandBuilder()
@@ -12,9 +12,9 @@ export async function execute(interaction) {
   const currentTrack = queue?.currentTrack;
 
   if (!queue || !currentTrack) {
-    await respond(interaction, 'Nothing is playing right now.');
+    await respond(interaction, statusMessage('Nothing playing', 'Nothing is playing right now.', 'idle'));
     return;
   }
 
-  await respond(interaction, `Now playing: ${trackMarkdown(currentTrack)}`);
+  await respond(interaction, trackStatusMessage('Now playing', currentTrack, 'playing'));
 }

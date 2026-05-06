@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { QueueRepeatMode, useQueue } from 'discord-player';
+import { statusMessage } from '../lib/embeds.js';
 import { setAutoplayEnabled } from '../lib/guild-settings.js';
 
 const modeNames = {
@@ -29,7 +30,7 @@ export async function execute(interaction) {
   const queue = useQueue();
 
   if (!queue) {
-    await interaction.reply('This server does not have an active player session.');
+    await interaction.reply(statusMessage('No active session', 'This server does not have an active player session.', 'warning'));
     return;
   }
 
@@ -37,5 +38,5 @@ export async function execute(interaction) {
   queue.setRepeatMode(mode);
   setAutoplayEnabled(interaction.guildId, mode === QueueRepeatMode.AUTOPLAY);
 
-  await interaction.reply(`Loop mode set to ${modeNames[mode] ?? mode}.`);
+  await interaction.reply(statusMessage('Loop mode', `Loop mode set to ${modeNames[mode] ?? mode}.`, 'info'));
 }

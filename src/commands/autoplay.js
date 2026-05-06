@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { QueueRepeatMode, useQueue } from 'discord-player';
+import { statusMessage } from '../lib/embeds.js';
 import { isAutoplayEnabled, setAutoplayEnabled } from '../lib/guild-settings.js';
 
 export const data = new SlashCommandBuilder()
@@ -28,5 +29,9 @@ export async function execute(interaction) {
   }
 
   const scope = queue ? 'this queue' : 'the next queue';
-  await interaction.reply(`Autoplay is now ${enabled ? 'enabled' : 'disabled'} for ${scope}.`);
+  await interaction.reply(statusMessage(
+    'Autoplay',
+    `Autoplay is now ${enabled ? 'enabled' : 'disabled'} for ${scope}.`,
+    enabled ? 'success' : 'idle'
+  ));
 }

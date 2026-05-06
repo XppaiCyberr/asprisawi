@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { useQueue } from 'discord-player';
+import { statusMessage } from '../lib/embeds.js';
 
 export const data = new SlashCommandBuilder()
   .setName('shuffle')
@@ -9,10 +10,10 @@ export async function execute(interaction) {
   const queue = useQueue();
 
   if (!queue || queue.tracks.size === 0) {
-    await interaction.reply('There are no upcoming tracks to shuffle.');
+    await interaction.reply(statusMessage('Nothing to shuffle', 'There are no upcoming tracks to shuffle.', 'idle'));
     return;
   }
 
   queue.tracks.shuffle();
-  await interaction.reply('Shuffled the upcoming tracks.');
+  await interaction.reply(statusMessage('Shuffled', 'Shuffled the upcoming tracks.', 'skipped'));
 }

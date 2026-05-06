@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { QueueRepeatMode, useMainPlayer } from 'discord-player';
+import { statusMessage } from '../lib/embeds.js';
 import { trackMarkdown } from '../lib/format.js';
 import { isAutoplayEnabled } from '../lib/guild-settings.js';
 import { createPlaybackStatus } from '../lib/playback-status.js';
@@ -21,7 +22,7 @@ export async function execute(interaction) {
   const voice = await requirePlayableVoiceChannel(interaction);
 
   if (!voice.ok) {
-    await respond(interaction, voice.message);
+    await respond(interaction, statusMessage('Voice required', voice.message, 'warning'));
     return;
   }
 
@@ -67,7 +68,11 @@ export async function execute(interaction) {
     }
   } catch (error) {
     console.error('Play command failed:', error);
-    await playbackStatus.update('Could not play that request. Try a YouTube or Spotify URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.', 'error');
+    await playbackStatus.update(statusMessage(
+      'Could not play',
+      'Could not play that request. Try a YouTube or Spotify URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.',
+      'error'
+    ), 'error');
   }
 }
 
@@ -102,8 +107,12 @@ function playResultMessage(result) {
   const trackCount = result.searchResult?.tracks?.length ?? 1;
 
   if (playlist && trackCount > 1) {
-    return `Queued ${trackCount} tracks from **${playlist.title}**.\nFirst: ${trackMarkdown(result.track)}`;
+    return statusMessage(
+      'Queued playlist',
+      `Queued ${trackCount} tracks from **${playlist.title}**.\nFirst: ${trackMarkdown(result.track)}`,
+      'queued'
+    );
   }
 
-  return `Queued: ${trackMarkdown(result.track)}`;
+  return statusMessage('Queued', trackMarkdown(result.track), 'queued');
 }

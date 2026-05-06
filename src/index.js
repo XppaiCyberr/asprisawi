@@ -5,8 +5,8 @@ import { Player } from 'discord-player';
 import { DefaultExtractors } from '@discord-player/extractor';
 import { chooseAutoplayTrack } from './lib/autoplay.js';
 import { loadCommands } from './lib/command-loader.js';
+import { statusMessage, trackStatusMessage } from './lib/embeds.js';
 import { respond, suppressEmbeds } from './lib/replies.js';
-import { trackMarkdown } from './lib/format.js';
 import { cleanAuthorName, cleanTrackTitle, plainText } from './lib/track-cleanup.js';
 import { SpotifyAwareYoutubeExtractor } from './lib/youtube-extractor.js';
 
@@ -67,13 +67,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   if (!interaction.inGuild()) {
-    await respond(interaction, 'Music commands only work inside a server.');
+    await respond(interaction, statusMessage('Server only', 'Music commands only work inside a server.', 'warning'));
     return;
   }
 
   if (!isAuthorizedInteraction(interaction)) {
     await respond(interaction, {
-      content: 'You do not have permission to use this bot.',
+      ...statusMessage('Permission denied', 'You do not have permission to use this bot.', 'error'),
       flags: MessageFlags.Ephemeral
     });
     return;
@@ -82,7 +82,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const command = client.commands.get(interaction.commandName);
 
   if (!command) {
-    await respond(interaction, `Unknown command: ${interaction.commandName}`);
+    await respond(interaction, statusMessage('Unknown command', `Unknown command: ${interaction.commandName}`, 'warning'));
     return;
   }
 
@@ -90,13 +90,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await player.context.provide({ guild: interaction.guild }, () => command.execute(interaction));
   } catch (error) {
     console.error(`Command ${interaction.commandName} failed:`, error);
-    await respond(interaction, 'That command failed. Check the bot logs for details.');
+    await respond(interaction, statusMessage('Command failed', 'That command failed. Check the bot logs for details.', 'error'));
   }
 });
 
 player.events.on('playerStart', async (queue, track) => {
   setActiveTrack(queue, track);
-  await updateTrackMessage(queue, track, `Now playing: ${trackMarkdown(track)}`, 'playing');
+  await updateTrackMessage(queue, track, trackStatusMessage('Now playing', track, 'playing'), 'playing');
 });
 
 player.events.on('willAutoPlay', async (queue, tracks, done) => {
@@ -109,17 +109,19 @@ player.events.on('willAutoPlay', async (queue, tracks, done) => {
 });
 
 player.events.on('playerSkip', async (queue, track) => {
-  await updateTrackMessage(queue, track, `Skipped ${trackMarkdown(track)} because the stream could not be loaded.`, 'skipped');
+  await updateTrackMessage(queue, track, trackStatusMessage('Skipped', track, 'skipped', {
+    footer: 'The stream could not be loaded.'
+  }), 'skipped');
 });
 
 player.events.on('emptyQueue', async (queue) => {
   clearActiveTrack(queue);
-  await sendQueueMessage(queue, 'Queue finished.');
+  await sendQueueMessage(queue, statusMessage('Queue finished', 'There are no more tracks queued.', 'idle'));
 });
 
 player.events.on('emptyChannel', async (queue) => {
   clearActiveTrack(queue);
-  await sendQueueMessage(queue, 'Voice channel is empty, leaving.');
+  await sendQueueMessage(queue, statusMessage('Voice channel empty', 'Voice channel is empty.', 'idle'));
 });
 
 player.events.on('disconnect', (queue) => {
@@ -136,7 +138,7 @@ player.events.on('error', (queue, error) => {
 
 player.events.on('playerError', async (queue, error) => {
   console.error(`Player error in ${queue.guild?.name ?? queue.guild?.id ?? 'unknown guild'}:`, error);
-  await updateTrackMessage(queue, queue.history?.currentTrack, playbackErrorMessage(error), 'error');
+  await updateTrackMessage(queue, queue.history?.currentTrack, statusMessage('Playback failed', playbackErrorMessage(error), 'error'), 'error');
 });
 
 player.on('debug', (message) => {

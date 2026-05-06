@@ -3,6 +3,10 @@ import { MessageFlags } from 'discord.js';
 export function suppressEmbeds(payload) {
   const message = typeof payload === 'string' ? { content: payload } : { ...payload };
 
+  if (message.embeds?.length) {
+    return message;
+  }
+
   return {
     ...message,
     flags: mergeMessageFlags(message.flags)

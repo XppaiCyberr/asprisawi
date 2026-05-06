@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { useQueue } from 'discord-player';
+import { statusMessage } from '../lib/embeds.js';
 
 export const data = new SlashCommandBuilder()
   .setName('volume')
@@ -17,12 +18,12 @@ export async function execute(interaction) {
   const queue = useQueue();
 
   if (!queue) {
-    await interaction.reply('This server does not have an active player session.');
+    await interaction.reply(statusMessage('No active session', 'This server does not have an active player session.', 'warning'));
     return;
   }
 
   const volume = interaction.options.getInteger('level', true);
   queue.node.setVolume(volume);
 
-  await interaction.reply(`Volume set to ${volume}.`);
+  await interaction.reply(statusMessage('Volume', `Volume set to ${volume}.`, 'info'));
 }
