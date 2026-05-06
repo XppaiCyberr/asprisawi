@@ -43,12 +43,9 @@ export async function execute(interaction) {
           requestedBy: interaction.user
         },
         bufferingTimeout: 15000,
-        leaveOnStop: true,
-        leaveOnStopCooldown: 5000,
-        leaveOnEnd: true,
-        leaveOnEndCooldown: 15000,
-        leaveOnEmpty: true,
-        leaveOnEmptyCooldown: 300000,
+        leaveOnStop: false,
+        leaveOnEnd: false,
+        leaveOnEmpty: false,
         skipOnNoStream: true,
         repeatMode: isAutoplayEnabled(interaction.guildId)
           ? QueueRepeatMode.AUTOPLAY
