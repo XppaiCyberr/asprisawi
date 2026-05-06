@@ -13,6 +13,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Stays in the voice channel by default; use `/stop` when you want it to leave.
 - Supports Windows and Ubuntu/Linux. Uses bundled `@ffmpeg-installer/ffmpeg` by default, or system `ffmpeg` when `FFMPEG_PATH` is set.
 - Cleans stale slash commands from older deployments when registering guild commands.
+- Optionally restricts slash command usage to specific Discord role IDs.
 
 ## Requirements
 
@@ -96,9 +97,12 @@ Copy-Item .env.example .env
 DISCORD_TOKEN=your-bot-token
 CLIENT_ID=your-application-id
 GUILD_ID=your-server-id
+AUTHORIZED_ROLE_IDS=role-id
 ```
 
 `GUILD_ID` is recommended while setting up because guild commands update immediately. Leave it empty only when you are ready to register global commands.
+
+`AUTHORIZED_ROLE_IDS` is optional. Leave it empty to allow everyone who can see the slash commands. To restrict the bot, enable Discord Developer Mode, right-click the allowed role, copy its ID, and put it there. Multiple roles can be comma-separated.
 
 ## Ubuntu Install
 
@@ -132,6 +136,7 @@ Fill in at least:
 DISCORD_TOKEN=your-bot-token
 CLIENT_ID=your-application-id
 GUILD_ID=your-server-id
+AUTHORIZED_ROLE_IDS=role-id
 FFMPEG_PATH=/usr/bin/ffmpeg
 ```
 

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
-import { ActivityType, Client, Collection, Events, GatewayIntentBits } from 'discord.js';
+import { ActivityType, Client, Collection, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
 import { Player } from 'discord-player';
 import { DefaultExtractors } from '@discord-player/extractor';
 import { chooseAutoplayTrack } from './lib/autoplay.js';
@@ -28,6 +28,7 @@ const client = new Client({
 
 client.commands = new Collection();
 const activeTracks = new Map();
+const authorizedRoleIds = new Set(parseIds(`${process.env.AUTHORIZED_ROLE_IDS ?? ''},${process.env.ALLOWED_ROLE_IDS ?? ''}`));
 const startedAt = Date.now();
 
 const player = new Player(client);
@@ -52,6 +53,9 @@ for (const command of await loadCommands()) {
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}.`);
   console.log(`Loaded ${client.commands.size} commands.`);
+  console.log(authorizedRoleIds.size > 0
+    ? `Command access restricted to ${authorizedRoleIds.size} role ID(s).`
+    : 'Command access is unrestricted. Set AUTHORIZED_ROLE_IDS to restrict it.');
   updatePresence();
   const presenceTimer = setInterval(updatePresence, 60000);
   presenceTimer.unref?.();
@@ -64,6 +68,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   if (!interaction.inGuild()) {
     await respond(interaction, 'Music commands only work inside a server.');
+    return;
+  }
+
+  if (!isAuthorizedInteraction(interaction)) {
+    await respond(interaction, {
+      content: 'You do not have permission to use this bot.',
+      flags: MessageFlags.Ephemeral
+    });
     return;
   }
 
@@ -140,6 +152,27 @@ player.events.on('debug', (queue, message) => {
 });
 
 await client.login(process.env.DISCORD_TOKEN);
+
+function isAuthorizedInteraction(interaction) {
+  if (authorizedRoleIds.size === 0) {
+    return true;
+  }
+
+  const roles = interaction.member?.roles;
+
+  if (Array.isArray(roles)) {
+    return roles.some((roleId) => authorizedRoleIds.has(roleId));
+  }
+
+  return Boolean(roles?.cache?.some((role) => authorizedRoleIds.has(role.id)));
+}
+
+function parseIds(value) {
+  return String(value ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
 
 async function updateTrackMessage(queue, track, content, state) {
   const playbackStatus = track?.metadata?.playbackStatus;
