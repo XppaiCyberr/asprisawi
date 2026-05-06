@@ -188,18 +188,25 @@ function updatePresence() {
     return;
   }
 
-  const requester = requesterName(track);
-  const name = truncatePresence(`${plainText(trackTitle(track))} | requested by ${requester}`, 128);
-
   client.user.setPresence({
     activities: [
       {
-        name,
+        name: presenceText(track),
         type: ActivityType.Listening
       }
     ],
     status: 'online'
   });
+}
+
+function presenceText(track) {
+  const title = plainText(trackTitle(track));
+  const author = plainText(track.author ?? '');
+  const requester = requesterName(track);
+  const suffix = ` - requested by ${requester}`;
+  const song = author ? `${title} by ${author}` : title;
+
+  return truncateWithSuffix(song, suffix, 128);
 }
 
 function requesterName(track) {
@@ -220,6 +227,20 @@ function truncatePresence(value, limit) {
   }
 
   return `${value.slice(0, limit - 3).trimEnd()}...`;
+}
+
+function truncateWithSuffix(value, suffix, limit) {
+  if (`${value}${suffix}`.length <= limit) {
+    return `${value}${suffix}`;
+  }
+
+  const available = limit - suffix.length;
+
+  if (available <= 3) {
+    return truncatePresence(`${value}${suffix}`, limit);
+  }
+
+  return `${value.slice(0, available - 3).trimEnd()}...${suffix}`;
 }
 
 function playbackErrorMessage(error) {
