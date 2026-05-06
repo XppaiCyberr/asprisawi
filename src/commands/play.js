@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { QueueRepeatMode, useMainPlayer } from 'discord-player';
 import { trackMarkdown } from '../lib/format.js';
 import { isAutoplayEnabled } from '../lib/guild-settings.js';
+import { respond } from '../lib/replies.js';
 import { requirePlayableVoiceChannel } from '../lib/voice.js';
 
 export const data = new SlashCommandBuilder()
@@ -18,7 +19,7 @@ export async function execute(interaction) {
   const voice = await requirePlayableVoiceChannel(interaction);
 
   if (!voice.ok) {
-    await interaction.reply(voice.message);
+    await respond(interaction, voice.message);
     return;
   }
 
@@ -50,10 +51,10 @@ export async function execute(interaction) {
       }
     });
 
-    await interaction.followUp(`Queued: ${trackMarkdown(result.track)}`);
+    await respond(interaction, `Queued: ${trackMarkdown(result.track)}`);
   } catch (error) {
     console.error('Play command failed:', error);
-    await interaction.followUp('Could not play that request. Try a YouTube URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.');
+    await respond(interaction, 'Could not play that request. Try a YouTube URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.');
   }
 }
 

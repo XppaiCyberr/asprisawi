@@ -4,7 +4,7 @@ import { Client, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { Player } from 'discord-player';
 import { DefaultExtractors } from '@discord-player/extractor';
 import { loadCommands } from './lib/command-loader.js';
-import { respond } from './lib/replies.js';
+import { respond, suppressEmbeds } from './lib/replies.js';
 import { trackMarkdown } from './lib/format.js';
 
 dotenv.config({ quiet: true });
@@ -56,14 +56,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   if (!interaction.inGuild()) {
-    await interaction.reply('Music commands only work inside a server.');
+    await respond(interaction, 'Music commands only work inside a server.');
     return;
   }
 
   const command = client.commands.get(interaction.commandName);
 
   if (!command) {
-    await interaction.reply(`Unknown command: ${interaction.commandName}`);
+    await respond(interaction, `Unknown command: ${interaction.commandName}`);
     return;
   }
 
@@ -132,7 +132,7 @@ async function sendQueueMessage(queue, content) {
   }
 
   try {
-    await channel.send({ content });
+    await channel.send(suppressEmbeds(content));
   } catch (error) {
     console.error('Failed to send queue message:', error);
   }

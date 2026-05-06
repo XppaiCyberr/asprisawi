@@ -19,6 +19,8 @@ npm install
 npm run register
 ```
 
+When `GUILD_ID` is set, registration replaces that server's commands and clears global commands from this Discord application. This removes old slash commands left by earlier bot scripts. If you register global commands and still see old server-only commands, set `CLEAR_GUILD_IDS` to the affected server ID and run `npm run register` once.
+
 6. Start the bot:
 
 ```bash
@@ -38,6 +40,8 @@ npm start
 - `/loop mode:<off|track|queue|autoplay>` changes repeat behavior.
 - `/volume level:<0-100>` changes player volume.
 - `/stop` stops playback and leaves voice.
+
+Bot messages suppress link embeds, so YouTube and playlist URLs do not expand into large web previews.
 
 Examples:
 

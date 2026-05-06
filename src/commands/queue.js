@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { useQueue } from 'discord-player';
 import { trackMarkdown, trimMessage } from '../lib/format.js';
+import { respond } from '../lib/replies.js';
 
 export const data = new SlashCommandBuilder()
   .setName('queue')
@@ -11,7 +12,7 @@ export async function execute(interaction) {
   const currentTrack = queue?.currentTrack;
 
   if (!queue || !currentTrack) {
-    await interaction.reply('The queue is empty.');
+    await respond(interaction, 'The queue is empty.');
     return;
   }
 
@@ -28,5 +29,5 @@ export async function execute(interaction) {
     lines.push(...upcomingTracks.map((track, index) => `${index + 1}. ${trackMarkdown(track)}`));
   }
 
-  await interaction.reply(trimMessage(lines.join('\n')));
+  await respond(interaction, trimMessage(lines.join('\n')));
 }
