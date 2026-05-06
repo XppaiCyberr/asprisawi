@@ -26,6 +26,7 @@ const client = new Client({
 
 client.commands = new Collection();
 const activeTracks = new Map();
+const startedAt = Date.now();
 
 const player = new Player(client);
 process.env.DOTENV_CONFIG_QUIET ??= 'true';
@@ -50,6 +51,8 @@ client.once(Events.ClientReady, (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}.`);
   console.log(`Loaded ${client.commands.size} commands.`);
   updatePresence();
+  const presenceTimer = setInterval(updatePresence, 60000);
+  presenceTimer.unref?.();
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -184,7 +187,12 @@ function updatePresence() {
 
   if (!track) {
     client.user.setPresence({
-      activities: [],
+      activities: [
+        {
+          name: `/play | up ${formatUptime()}`,
+          type: ActivityType.Watching
+        }
+      ],
       status: 'online'
     });
     return;
@@ -209,10 +217,12 @@ function presenceName(track) {
 function presenceState(track) {
   const author = cleanAuthorName(track.author);
   const requester = requesterName(track);
+  const uptime = ` | up ${formatUptime()}`;
+  const text = author
+    ? `by ${author} | req: ${requester}`
+    : `req: ${requester}`;
 
-  return truncatePresence(author
-    ? `by ${author} - requested by ${requester}`
-    : `requested by ${requester}`, 128);
+  return truncateWithSuffix(text, uptime, 128);
 }
 
 function cleanTrackTitle(track) {
@@ -244,6 +254,44 @@ function truncatePresence(value, limit) {
   }
 
   return `${value.slice(0, limit - 3).trimEnd()}...`;
+}
+
+function truncateWithSuffix(value, suffix, limit) {
+  const content = `${value}${suffix}`;
+
+  if (content.length <= limit) {
+    return content;
+  }
+
+  const available = limit - suffix.length;
+
+  if (available <= 3) {
+    return truncatePresence(content, limit);
+  }
+
+  return `${value.slice(0, available - 3).trimEnd()}...${suffix}`;
+}
+
+function formatUptime() {
+  const totalSeconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor(totalSeconds % 86400 / 3600);
+  const minutes = Math.floor(totalSeconds % 3600 / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m`;
+  }
+
+  return `${seconds}s`;
 }
 
 function stripAuthorPrefix(title, author) {
