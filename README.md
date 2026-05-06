@@ -8,6 +8,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Supports YouTube URLs/searches, YouTube Music URLs, playlists, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
 - Shows playback presence while music is active, including the current track, artist, and requester.
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
+- Edits one playback status message instead of posting separate queued and now-playing messages for the same request.
 - Auto-leaves when playback ends or the voice channel is empty.
 - Uses bundled `@ffmpeg-installer/ffmpeg` by default.
 - Cleans stale slash commands from older deployments when registering guild commands.

@@ -79,29 +79,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 player.events.on('playerStart', async (queue, track) => {
   setActiveTrack(queue, track);
-  await sendQueueMessage(queue, `Now playing: ${trackMarkdown(track)}`);
-});
-
-player.events.on('audioTrackAdd', async (queue, track) => {
-  await sendQueueMessage(queue, `Queued: ${trackMarkdown(track)}`);
-});
-
-player.events.on('audioTracksAdd', async (queue, tracks) => {
-  await sendQueueMessage(queue, `Queued ${tracks.length} tracks.`);
+  await updatePlaybackMessage(queue, `Now playing: ${trackMarkdown(track)}`, 'playing');
 });
 
 player.events.on('playerSkip', async (queue, track) => {
-  await sendQueueMessage(queue, `Skipped ${trackMarkdown(track)} because the stream could not be loaded.`);
+  await updatePlaybackMessage(queue, `Skipped ${trackMarkdown(track)} because the stream could not be loaded.`, 'skipped');
 });
 
 player.events.on('emptyQueue', async (queue) => {
   clearActiveTrack(queue);
-  await sendQueueMessage(queue, 'Queue finished.');
+  await updatePlaybackMessage(queue, 'Queue finished.', 'idle');
 });
 
 player.events.on('emptyChannel', async (queue) => {
   clearActiveTrack(queue);
-  await sendQueueMessage(queue, 'Voice channel is empty, leaving.');
+  await updatePlaybackMessage(queue, 'Voice channel is empty, leaving.', 'idle');
 });
 
 player.events.on('disconnect', (queue) => {
@@ -118,7 +110,7 @@ player.events.on('error', (queue, error) => {
 
 player.events.on('playerError', async (queue, error) => {
   console.error(`Player error in ${queue.guild?.name ?? queue.guild?.id ?? 'unknown guild'}:`, error);
-  await sendQueueMessage(queue, playbackErrorMessage(error));
+  await updatePlaybackMessage(queue, playbackErrorMessage(error), 'error');
 });
 
 player.on('debug', (message) => {
@@ -134,6 +126,16 @@ player.events.on('debug', (queue, message) => {
 });
 
 await client.login(process.env.DISCORD_TOKEN);
+
+async function updatePlaybackMessage(queue, content, state) {
+  const playbackStatus = queue.metadata?.playbackStatus;
+
+  if (playbackStatus && await playbackStatus.update(content, state)) {
+    return;
+  }
+
+  await sendQueueMessage(queue, content);
+}
 
 async function sendQueueMessage(queue, content) {
   const channel = queue.metadata?.send

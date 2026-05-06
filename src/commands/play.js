@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { QueueRepeatMode, useMainPlayer } from 'discord-player';
 import { trackMarkdown } from '../lib/format.js';
 import { isAutoplayEnabled } from '../lib/guild-settings.js';
+import { createPlaybackStatus } from '../lib/playback-status.js';
 import { respond } from '../lib/replies.js';
 import { requirePlayableVoiceChannel } from '../lib/voice.js';
 
@@ -27,6 +28,7 @@ export async function execute(interaction) {
   const player = useMainPlayer();
 
   await interaction.deferReply();
+  const playbackStatus = createPlaybackStatus(interaction);
 
   try {
     const result = await player.play(voice.voiceChannel, query, {
@@ -34,7 +36,8 @@ export async function execute(interaction) {
       nodeOptions: {
         metadata: {
           textChannel: interaction.channel,
-          requestedBy: interaction.user
+          requestedBy: interaction.user,
+          playbackStatus
         },
         bufferingTimeout: 15000,
         leaveOnStop: true,
@@ -51,11 +54,41 @@ export async function execute(interaction) {
       }
     });
 
-    await respond(interaction, `Queued: ${trackMarkdown(result.track)}`);
+    setQueueMetadata(result.queue, {
+      textChannel: interaction.channel,
+      requestedBy: interaction.user,
+      playbackStatus
+    });
+
+    if (playbackStatus.state !== 'playing') {
+      await playbackStatus.update(playResultMessage(result), 'queued');
+    }
   } catch (error) {
     console.error('Play command failed:', error);
-    await respond(interaction, 'Could not play that request. Try a YouTube URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.');
+    await playbackStatus.update('Could not play that request. Try a YouTube URL/search, direct audio URL, SoundCloud, Vimeo, or Reverbnation source.', 'error');
   }
+}
+
+function setQueueMetadata(queue, metadata) {
+  const current = queue.metadata?.send
+    ? { textChannel: queue.metadata }
+    : { ...(queue.metadata ?? {}) };
+
+  queue.setMetadata({
+    ...current,
+    ...metadata
+  });
+}
+
+function playResultMessage(result) {
+  const playlist = result.searchResult?.playlist;
+  const trackCount = result.searchResult?.tracks?.length ?? 1;
+
+  if (playlist && trackCount > 1) {
+    return `Queued ${trackCount} tracks from **${playlist.title}**.\nFirst: ${trackMarkdown(result.track)}`;
+  }
+
+  return `Queued: ${trackMarkdown(result.track)}`;
 }
 
 function normalizeYouTubeUrl(query) {
