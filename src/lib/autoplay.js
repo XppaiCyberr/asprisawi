@@ -22,7 +22,9 @@ export async function chooseAutoplayTrack(queue, tracks) {
   }
 
   const fallbackTracks = await searchArtistRadio(queue);
-  return chooseFromCandidates(queue, fallbackTracks);
+  return chooseFromCandidates(queue, fallbackTracks)
+    ?? chooseLooseFallback(queue, fallbackTracks)
+    ?? chooseLooseFallback(queue, tracks);
 }
 
 function chooseFromCandidates(queue, tracks = []) {
@@ -57,6 +59,23 @@ function chooseFromCandidates(queue, tracks = []) {
     .sort((a, b) => b.score - a.score);
 
   return ranked[0]?.track ?? null;
+}
+
+function chooseLooseFallback(queue, tracks = []) {
+  const candidates = tracks.filter(Boolean);
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  const knownUrls = new Set(
+    getKnownTracks(queue)
+      .map((track) => track.url)
+      .filter(Boolean)
+  );
+
+  return candidates.find((track) => track.url && !knownUrls.has(track.url))
+    ?? candidates[0];
 }
 
 function scoreCandidate(track, index, context) {
