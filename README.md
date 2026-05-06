@@ -1,37 +1,145 @@
-# Discord Music Bot
+# Asprisawi Discord Music Bot
 
-A small Discord slash-command music bot using `discord.js`, `discord-player`, `@discord-player/extractor`, and `discord-player-youtube`.
+A Discord slash-command music bot built with `discord.js`, `discord-player`, `@discord-player/extractor`, and `discord-player-youtube`.
 
-## Setup
+## Features
 
-1. Create a Discord application and bot in the Discord Developer Portal.
-2. Copy `.env.example` to `.env` and fill in `DISCORD_TOKEN`, `CLIENT_ID`, and a development `GUILD_ID`.
-3. Invite the bot to your server with the `bot` and `applications.commands` scopes. Give it at least View Channels, Send Messages, Connect, and Speak.
-4. Install dependencies:
+- Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
+- Supports YouTube URLs/searches, YouTube Music URLs, playlists, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
+- Shows playback presence while music is active, including the current track, artist, and requester.
+- Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
+- Auto-leaves when playback ends or the voice channel is empty.
+- Uses bundled `@ffmpeg-installer/ffmpeg` by default.
+- Cleans stale slash commands from older deployments when registering guild commands.
 
-```bash
-npm install
+## Requirements
+
+- Node.js `20.11.0` or newer.
+- `pnpm` through Corepack.
+- A Discord server where you can invite bots or manage apps.
+
+## Create The Discord Bot
+
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Select **New Application**, give it a name, then create it.
+3. Open **General Information** and copy **Application ID**. This is `CLIENT_ID`.
+4. Open **Bot**.
+5. Create the bot user if Discord has not already created one.
+6. Copy or reset the bot token. This is `DISCORD_TOKEN`.
+7. Leave privileged gateway intents disabled. This bot only uses guild and voice-state gateway intents.
+
+Keep the token private. Do not paste it into Discord chat, GitHub, or screenshots.
+
+## Invite The Bot
+
+In the Developer Portal, open **OAuth2** and generate an install URL.
+
+Scopes:
+
+- `bot`
+- `applications.commands`
+
+Bot permissions:
+
+- View Channels
+- Send Messages
+- Connect
+- Speak
+
+Minimum permission integer for those four permissions:
+
+```text
+3148800
 ```
 
-5. Register slash commands:
+Manual invite URL format:
 
-```bash
-npm run register
+```text
+https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=3148800&scope=bot%20applications.commands
 ```
 
-When `GUILD_ID` is set, registration replaces that server's commands and clears global commands from this Discord application. This removes old slash commands left by earlier bot scripts. If you register global commands and still see old server-only commands, set `CLEAR_GUILD_IDS` to the affected server ID and run `npm run register` once.
+Replace `YOUR_CLIENT_ID` with the Application ID, open the URL, and choose your server. If the bot will use private text or voice channels, make sure the bot role is also allowed to view/send/connect/speak in those channel overrides.
 
-6. Start the bot:
+Users need permission to use application commands in the channel. If slash commands do not show for normal members, check the server or channel permission for **Use Application Commands**.
 
-```bash
-npm start
+## Install
+
+1. Enable Corepack:
+
+```powershell
+corepack enable
+```
+
+2. Activate the pinned pnpm version:
+
+```powershell
+corepack prepare pnpm@10.33.3 --activate
+```
+
+3. Install dependencies:
+
+```powershell
+pnpm install --frozen-lockfile
+```
+
+4. Create `.env`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+5. Edit `.env`:
+
+```env
+DISCORD_TOKEN=your-bot-token
+CLIENT_ID=your-application-id
+GUILD_ID=your-server-id
+```
+
+`GUILD_ID` is recommended while setting up because guild commands update immediately. Leave it empty only when you are ready to register global commands.
+
+## Register Commands
+
+Register slash commands:
+
+```powershell
+pnpm run register
+```
+
+When `GUILD_ID` is set, registration replaces that server's commands and clears global commands from this Discord application. This removes old slash commands left by previous bot scripts.
+
+If you register global commands and still see old server-only commands, set this in `.env` and run `pnpm run register` once:
+
+```env
+CLEAR_GUILD_IDS=server-id,another-server-id
+```
+
+## Start The Bot
+
+Run a syntax check:
+
+```powershell
+pnpm run check
+```
+
+Start the bot:
+
+```powershell
+pnpm start
+```
+
+You should see a log like:
+
+```text
+Logged in as BotName#0000.
+Loaded 11 commands.
 ```
 
 ## Commands
 
 - `/play query:<song, URL, or playlist>` queues music in your voice channel.
 - `/nowplaying` shows the active track.
-- `/queue` shows the current track and the next tracks.
+- `/queue` shows the current track and next tracks.
 - `/pause` toggles pause/resume.
 - `/skip` skips the current track.
 - `/previous` returns to the previous track when history is available.
@@ -41,9 +149,6 @@ npm start
 - `/volume level:<0-100>` changes player volume.
 - `/stop` stops playback and leaves voice.
 
-Bot messages suppress link embeds, so YouTube and playlist URLs do not expand into large web previews.
-While playback is active, the bot presence shows the current track, artist, and requester.
-
 Examples:
 
 ```text
@@ -52,20 +157,40 @@ Examples:
 /play query:artist song name
 ```
 
-## Supported Sources
+## Optional Configuration
 
-This uses Discord Player's official default extractors plus the community `discord-player-youtube` extractor. Out of the box that covers YouTube URLs/searches, local/raw audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where the extractor can resolve or bridge playback.
+Use a custom ffmpeg binary instead of the bundled one:
 
-YouTube playback is unofficial and can be brittle when YouTube changes its clients. The extractor works without auth, but its README recommends adding `YOUTUBE_COOKIE` for better stability. Use a throwaway YouTube account cookie and check the source platform's terms before using it beyond private testing.
+```env
+FFMPEG_PATH=C:\path\to\ffmpeg.exe
+```
 
-## YouTube Sign-In Errors
+Improve YouTube stability with a throwaway YouTube account cookie:
 
-If you see `You must be signed in to perform this operation`, add `YOUTUBE_COOKIE` to `.env` and restart the bot. Use the full cookie header string from a throwaway YouTube account browser session.
+```env
+YOUTUBE_COOKIE=your-full-cookie-header
+```
 
-The Discord voice stack also needs `@snazzah/davey` for DAVE protocol support; it is included in this project.
+YouTube playback is unofficial and can be brittle when YouTube changes its clients. Use a throwaway account cookie, not your personal account, and check the source platform's terms before using it beyond private testing.
 
-The project uses `@ffmpeg-installer/ffmpeg` by default. If you prefer a system ffmpeg binary, set `FFMPEG_PATH` in `.env`.
+Enable Discord Player debug logs:
 
-## Known Audit Note
+```env
+DEBUG_PLAYER=true
+```
 
-`npm audit` currently reports a moderate advisory through `@discord-player/extractor` -> `file-type`. The extractor package is already pinned to the latest release, and npm does not currently provide a non-breaking fix path, so this scaffold keeps the current library version unless the upstream package publishes a patched dependency path.
+## Troubleshooting
+
+If you see `You must be signed in to perform this operation`, add `YOUTUBE_COOKIE` to `.env`, restart the bot, then try again.
+
+If commands do not appear, run `pnpm run register` again and confirm the bot was invited with the `applications.commands` scope.
+
+If old commands still appear, they are usually registered in the other scope. Use `GUILD_ID` to register guild commands and clear globals, or use `CLEAR_GUILD_IDS` when registering global commands to clear old guild commands.
+
+If the bot joins voice but no audio plays, confirm the bot role has **Connect** and **Speak** in that voice channel.
+
+## Discord References
+
+- [OAuth2 and permissions](https://docs.discord.com/developers/platform/oauth2-and-permissions)
+- [Application command authorization](https://docs.discord.com/developers/interactions/application-commands#authorizing-your-application)
+- [Permission flags](https://docs.discord.com/developers/topics/permissions#bitwise-permission-flags)
