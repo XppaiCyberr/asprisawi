@@ -11,7 +11,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
 - Edits a track's queued status into now-playing, then posts a new message for each new track so chat keeps playback history.
 - Stays in the voice channel by default; use `/stop` when you want it to leave.
-- Uses bundled `@ffmpeg-installer/ffmpeg` by default.
+- Supports Windows and Ubuntu/Linux. Uses bundled `@ffmpeg-installer/ffmpeg` by default, or system `ffmpeg` when `FFMPEG_PATH` is set.
 - Cleans stale slash commands from older deployments when registering guild commands.
 
 ## Requirements
@@ -64,7 +64,7 @@ Replace `YOUR_CLIENT_ID` with the Application ID, open the URL, and choose your 
 
 Users need permission to use application commands in the channel. If slash commands do not show for normal members, check the server or channel permission for **Use Application Commands**.
 
-## Install
+## Windows Install
 
 1. Enable Corepack:
 
@@ -99,6 +99,69 @@ GUILD_ID=your-server-id
 ```
 
 `GUILD_ID` is recommended while setting up because guild commands update immediately. Leave it empty only when you are ready to register global commands.
+
+## Ubuntu Install
+
+The bot works on Ubuntu. The code is not Windows-only: `@ffmpeg-installer/ffmpeg` can provide a bundled ffmpeg binary, and the Ubuntu installer also installs system `ffmpeg` and sets `FFMPEG_PATH=/usr/bin/ffmpeg`.
+
+From a cloned checkout on the Ubuntu server:
+
+```bash
+sudo bash scripts/install-ubuntu.sh
+```
+
+The installer:
+
+- installs system packages: `curl`, `git`, `rsync`, `ffmpeg`, build tools, and Python 3
+- installs Node.js `22.x` when the existing Node.js version is older than `20.11.0`
+- enables Corepack and pnpm `10.33.3`
+- copies the app to `/opt/asprisawi`
+- creates an `asprisawi` system user
+- installs production dependencies
+- creates `/etc/systemd/system/asprisawi.service`
+
+Edit the environment file:
+
+```bash
+sudo nano /opt/asprisawi/.env
+```
+
+Fill in at least:
+
+```env
+DISCORD_TOKEN=your-bot-token
+CLIENT_ID=your-application-id
+GUILD_ID=your-server-id
+FFMPEG_PATH=/usr/bin/ffmpeg
+```
+
+Register slash commands:
+
+```bash
+cd /opt/asprisawi
+sudo -u asprisawi corepack pnpm run register
+```
+
+Start and inspect the service:
+
+```bash
+sudo systemctl start asprisawi
+sudo systemctl status asprisawi
+sudo journalctl -u asprisawi -f
+```
+
+Installer options:
+
+```bash
+# Install somewhere else
+sudo APP_DIR=/srv/asprisawi bash scripts/install-ubuntu.sh
+
+# Use a different service/user name
+sudo APP_USER=discordbot SERVICE_NAME=discordbot bash scripts/install-ubuntu.sh
+
+# Register commands during install when .env is already filled
+sudo REGISTER_COMMANDS=true bash scripts/install-ubuntu.sh
+```
 
 ## Register Commands
 
