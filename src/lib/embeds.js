@@ -14,10 +14,40 @@ export const STATUS_COLORS = {
   neutral: 0x64748b
 };
 
+const STATUS_TITLE_EMOJIS = {
+  Autoplay: '🔁',
+  'Command failed': '⚠️',
+  'Could not play': '❌',
+  'Loop mode': '🔂',
+  'No active session': '📭',
+  'No previous track': '⏮️',
+  'Nothing playing': '🔇',
+  'Nothing to shuffle': '🔀',
+  'Now playing': '🎵',
+  Paused: '⏸️',
+  'Playback failed': '❌',
+  'Permission denied': '🚫',
+  'Previous track': '⏮️',
+  Queue: '📜',
+  'Queue empty': '📭',
+  'Queue finished': '✅',
+  Queued: '➕',
+  'Queued playlist': '📚',
+  Resumed: '▶️',
+  Shuffled: '🔀',
+  Skipped: '⏭️',
+  Stopped: '⏹️',
+  'Trying YouTube': '🔎',
+  'Unknown command': '❔',
+  'Voice channel empty': '👋',
+  'Voice required': '🎙️',
+  Volume: '🔊'
+};
+
 export function statusMessage(title, description, color = 'neutral', options = {}) {
   const embed = new EmbedBuilder()
     .setColor(resolveColor(color))
-    .setTitle(title)
+    .setTitle(statusTitle(title, options.emoji))
     .setDescription(trimEmbedDescription(description))
     .setTimestamp();
 
@@ -37,6 +67,20 @@ export function statusMessage(title, description, color = 'neutral', options = {
 
 export function trackStatusMessage(title, track, color = 'neutral', options = {}) {
   return statusMessage(title, trackMarkdown(track), color, options);
+}
+
+function statusTitle(title, emoji) {
+  if (emoji === false) {
+    return title;
+  }
+
+  const prefix = emoji || STATUS_TITLE_EMOJIS[title];
+
+  if (!prefix || title.startsWith(`${prefix} `)) {
+    return title;
+  }
+
+  return `${prefix} ${title}`;
 }
 
 function resolveColor(color) {
