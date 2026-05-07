@@ -203,5 +203,6 @@ function sameSongTitle(titleKey, knownTitleKey) {
   const longer = titleKey.length < knownTitleKey.length ? knownTitleKey : titleKey;
   const tokenCount = shorter.split(' ').filter(Boolean).length;
 
-  return tokenCount >= 3 && longer.includes(shorter);
+  return tokenCount >= 3 && longer.includes(shorter)
+    || tokenCount >= 2 && longer.endsWith(` ${shorter}`);
 }

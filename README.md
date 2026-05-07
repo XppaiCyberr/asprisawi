@@ -5,6 +5,9 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 ## Features
 
 - Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
+- `/tts` can read user chat messages into a voice channel using Microsoft Edge TTS without a paid API key.
+- `/sawi` lets users ask Sawi questions through Groq's OpenAI-compatible chat API.
+- Plain text `/play` searches default to Spotify, and `/searchsource` can switch a server to YouTube or automatic search.
 - Supports YouTube URLs/searches, YouTube Music URLs, Spotify track/album/playlist URLs, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
 - Autoplay uses related recommendations and filters duplicate song titles from other channels/uploads.
 - Shows presence with bot uptime, and adds the current track, artist, and requester while music is active.
@@ -18,7 +21,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 
 ## Requirements
 
-- Node.js `20.11.0` or newer.
+- Node.js `20.19.0` or newer.
 - `pnpm` through Corepack.
 - A Discord server where you can invite bots or manage apps.
 
@@ -30,7 +33,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 4. Open **Bot**.
 5. Create the bot user if Discord has not already created one.
 6. Copy or reset the bot token. This is `DISCORD_TOKEN`.
-7. Leave privileged gateway intents disabled. This bot only uses guild and voice-state gateway intents.
+7. To use automatic chat TTS, enable **Message Content Intent** under Privileged Gateway Intents. The other privileged intents can stay disabled.
 
 Keep the token private. Do not paste it into Discord chat, GitHub, or screenshots.
 
@@ -99,11 +102,14 @@ DISCORD_TOKEN=your-bot-token
 CLIENT_ID=your-application-id
 GUILD_ID=your-server-id
 AUTHORIZED_ROLE_IDS=role-id
+ENABLE_MESSAGE_CONTENT_INTENT=true
 ```
 
 `GUILD_ID` is recommended while setting up because guild commands update immediately. Leave it empty only when you are ready to register global commands.
 
 `AUTHORIZED_ROLE_IDS` is optional. Leave it empty to allow everyone who can see the slash commands. To restrict the bot, enable Discord Developer Mode, right-click the allowed role, copy its ID, and put it there. Multiple roles can be comma-separated.
+
+Only set `ENABLE_MESSAGE_CONTENT_INTENT=true` after enabling **Message Content Intent** in the Discord Developer Portal. If the portal toggle is off, Discord rejects the gateway connection with `Used disallowed intents`.
 
 ## Ubuntu Install
 
@@ -118,7 +124,7 @@ sudo bash scripts/install-ubuntu.sh
 The installer:
 
 - installs system packages: `curl`, `git`, `rsync`, `ffmpeg`, build tools, and Python 3
-- installs Node.js `22.x` when the existing Node.js version is older than `20.11.0`
+- installs Node.js `22.x` when the existing Node.js version is older than `20.19.0`
 - enables Corepack and pnpm `10.33.3`
 - copies the app to `/opt/asprisawi`
 - creates an `asprisawi` system user
@@ -138,6 +144,7 @@ DISCORD_TOKEN=your-bot-token
 CLIENT_ID=your-application-id
 GUILD_ID=your-server-id
 AUTHORIZED_ROLE_IDS=role-id
+ENABLE_MESSAGE_CONTENT_INTENT=true
 FFMPEG_PATH=/usr/bin/ffmpeg
 ```
 
@@ -203,7 +210,7 @@ You should see a log like:
 
 ```text
 Logged in as BotName#0000.
-Loaded 11 commands.
+Loaded 14 commands.
 ```
 
 ## Commands
@@ -216,8 +223,11 @@ Loaded 11 commands.
 - `/previous` returns to the previous track when history is available.
 - `/shuffle` shuffles queued tracks.
 - `/autoplay enabled:<true|false>` toggles related tracks when the queue ends.
+- `/searchsource source:<spotify|youtube|auto>` changes the default source for plain text `/play` searches.
 - `/loop mode:<off|track|queue|autoplay>` changes repeat behavior.
 - `/volume level:<0-100>` changes player volume.
+- `/tts enabled:<true|false> voice:<optional Edge TTS ShortName>` toggles automatic TTS for this text channel and your voice channel.
+- `/sawi question:<question>` asks Sawi a question.
 - `/stop` stops playback and leaves voice.
 
 Examples:
@@ -227,7 +237,18 @@ Examples:
 /play query:https://music.youtube.com/watch?v=VIDEO_ID
 /play query:https://open.spotify.com/playlist/PLAYLIST_ID
 /play query:artist song name
+/tts enabled:true
+/tts enabled:true voice:en-US-AriaNeural
+/tts enabled:false
+/sawi question:hi sawi, how should I relax tonight?
+@BotName hi sawi, recommend a cozy song
 ```
+
+Plain text searches use Spotify by default and fall back to YouTube when Spotify returns no results. Use `/searchsource source:youtube` if you prefer YouTube search, or `/searchsource source:auto` to let Discord Player choose. URLs still use their detected source.
+
+When `/tts` is enabled, the bot reads normal messages from the channel where you ran the command and speaks them in your current voice channel. It ignores bot and webhook messages. Generated TTS tracks do not post now-playing or queue-finished messages.
+
+You can also ask Sawi by mentioning the bot in chat, or by replying to a previous `Sawi says` message. Mentions work with the normal `GuildMessages` intent. Replies that do not ping the bot may also need Discord's Message Content intent.
 
 ## Optional Configuration
 
@@ -258,11 +279,36 @@ Enable Discord Player debug logs:
 DEBUG_PLAYER=true
 ```
 
+Enable Sawi AI answers through Groq:
+
+```env
+GROQ_API_KEY=your-groq-api-key
+GROQ_MODEL=openai/gpt-oss-120b
+```
+
+`GROQ_MODEL` is optional and defaults to `openai/gpt-oss-120b`.
+
+Set the default voice for `/tts`:
+
+```env
+TTS_VOICE=id-ID-ArdiNeural
+```
+
+`/tts` uses Microsoft Edge Read Aloud TTS through the `msedge-tts` package, so it does not need a Discord, OpenAI, Azure, or ElevenLabs API key. It still needs outbound network access to Microsoft's speech endpoint and Discord's Message Content intent. Enable that portal toggle, then set `ENABLE_MESSAGE_CONTENT_INTENT=true` in `.env`. Use an Edge TTS ShortName such as `id-ID-ArdiNeural`, `id-ID-GadisNeural`, or `en-US-AriaNeural`.
+
+Store persistent per-server settings somewhere other than `data/guild-settings.json`:
+
+```env
+GUILD_SETTINGS_PATH=/var/lib/asprisawi/guild-settings.json
+```
+
 ## Troubleshooting
 
 If you see `You must be signed in to perform this operation`, add `YOUTUBE_COOKIE` to `.env`, restart the bot, then try again.
 
 If commands do not appear, run `pnpm run register` again and confirm the bot was invited with the `applications.commands` scope.
+
+If `/tts` says setup is required or does not read chat messages, enable **Message Content Intent** in the Discord Developer Portal, set `ENABLE_MESSAGE_CONTENT_INTENT=true` in `.env`, restart the bot, and confirm you enabled TTS in the same text channel where users are chatting.
 
 If old commands still appear, they are usually registered in the other scope. Use `GUILD_ID` to register guild commands and clear globals, or use `CLEAR_GUILD_IDS` when registering global commands to clear old guild commands.
 

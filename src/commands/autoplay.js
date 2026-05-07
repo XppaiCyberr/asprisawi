@@ -2,6 +2,8 @@ import { SlashCommandBuilder } from 'discord.js';
 import { QueueRepeatMode, useQueue } from 'discord-player';
 import { statusMessage } from '../lib/embeds.js';
 import { isAutoplayEnabled, setAutoplayEnabled } from '../lib/guild-settings.js';
+import { respond } from '../lib/replies.js';
+import { requireSameVoiceChannel } from '../lib/voice.js';
 
 export const data = new SlashCommandBuilder()
   .setName('autoplay')
@@ -20,7 +22,16 @@ export async function execute(interaction) {
     : isAutoplayEnabled(interaction.guildId);
   const enabled = requestedState ?? !currentState;
 
-  setAutoplayEnabled(interaction.guildId, enabled);
+  if (queue) {
+    const voice = await requireSameVoiceChannel(interaction, queue);
+
+    if (!voice.ok) {
+      await respond(interaction, statusMessage('Voice required', voice.message, 'warning'));
+      return;
+    }
+  }
+
+  await setAutoplayEnabled(interaction.guildId, enabled);
 
   if (queue && enabled) {
     queue.setRepeatMode(QueueRepeatMode.AUTOPLAY);
@@ -29,7 +40,7 @@ export async function execute(interaction) {
   }
 
   const scope = queue ? 'this queue' : 'the next queue';
-  await interaction.reply(statusMessage(
+  await respond(interaction, statusMessage(
     'Autoplay',
     `Autoplay is now ${enabled ? 'enabled' : 'disabled'} for ${scope}.`,
     enabled ? 'success' : 'idle'

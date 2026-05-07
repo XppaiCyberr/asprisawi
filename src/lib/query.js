@@ -1,10 +1,11 @@
 import { QueryType } from 'discord-player';
+import { DEFAULT_SEARCH_SOURCE } from './guild-settings.js';
 
 export function normalizePlaybackQuery(query) {
   return normalizeYouTubeUrl(query);
 }
 
-export function searchEngineForQuery(query) {
+export function searchEngineForQuery(query, defaultSearchSource = DEFAULT_SEARCH_SOURCE) {
   const spotifyType = spotifyQueryType(query);
 
   if (spotifyType === 'track') {
@@ -19,7 +20,29 @@ export function searchEngineForQuery(query) {
     return QueryType.SPOTIFY_PLAYLIST;
   }
 
+  if (isUrl(query)) {
+    return undefined;
+  }
+
+  if (defaultSearchSource === 'spotify') {
+    return QueryType.SPOTIFY_SEARCH;
+  }
+
+  if (defaultSearchSource === 'youtube') {
+    return QueryType.YOUTUBE_SEARCH;
+  }
+
   return undefined;
+}
+
+export function fallbackSearchEngineForQuery(query, defaultSearchSource = DEFAULT_SEARCH_SOURCE) {
+  if (isUrl(query) || spotifyQueryType(query)) {
+    return undefined;
+  }
+
+  return defaultSearchSource === 'spotify'
+    ? QueryType.YOUTUBE_SEARCH
+    : undefined;
 }
 
 function spotifyQueryType(query) {
@@ -64,4 +87,13 @@ function normalizeYouTubeUrl(query) {
   }
 
   return query;
+}
+
+function isUrl(query) {
+  try {
+    new URL(String(query).trim());
+    return true;
+  } catch {
+    return false;
+  }
 }
