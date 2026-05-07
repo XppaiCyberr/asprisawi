@@ -1,0 +1,28 @@
+diff --git a/dist/index.js b/dist/index.js
+index d9d67e0..4e47720 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -577,7 +577,8 @@ var AttachmentExtractor = class extends import_discord_player4.BaseExtractor {
+         const fstat = await (0, import_promises.stat)(query);
+         if (!fstat.isFile()) return this.emptyResponse();
+         const fileExt = import_path.default.extname(query).toLowerCase();
+-        const mime = await fileType.fromFile(query).then((v) => {
++        const detectFileType = fileType.fileTypeFromFile ?? fileType.fromFile;
++        const mime = await detectFileType(query).then((v) => {
+           if (v) return v;
+           if (/\.(opus|pcm)$/.test(fileExt))
+             return { mime: `raw/${fileExt.replace(".", "")}` };
+diff --git a/dist/index.mjs b/dist/index.mjs
+index af47f35..b39b15f 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -565,7 +565,8 @@ var AttachmentExtractor = class extends BaseExtractor {
+         const fstat = await stat(query);
+         if (!fstat.isFile()) return this.emptyResponse();
+         const fileExt = path.extname(query).toLowerCase();
+-        const mime = await fileType.fromFile(query).then((v) => {
++        const detectFileType = fileType.fileTypeFromFile ?? fileType.fromFile;
++        const mime = await detectFileType(query).then((v) => {
+           if (v) return v;
+           if (/\.(opus|pcm)$/.test(fileExt))
+             return { mime: `raw/${fileExt.replace(".", "")}` };

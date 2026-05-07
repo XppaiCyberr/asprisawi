@@ -54,3 +54,24 @@ export async function requirePlayableVoiceChannel(interaction) {
 
   return voice;
 }
+
+export async function requireSameVoiceChannel(interaction, queue) {
+  const voice = await requireVoiceChannel(interaction);
+
+  if (!voice.ok) {
+    return voice;
+  }
+
+  const botMember = interaction.guild.members.me
+    ?? await interaction.guild.members.fetchMe();
+  const activeVoiceChannel = queue?.channel ?? botMember.voice.channel;
+
+  if (activeVoiceChannel && activeVoiceChannel.id !== voice.voiceChannel.id) {
+    return {
+      ok: false,
+      message: `Join ${activeVoiceChannel} to control playback.`
+    };
+  }
+
+  return voice;
+}

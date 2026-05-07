@@ -30,7 +30,8 @@ export function normalizedSongKey(track) {
 export function normalizedSongKeys(track) {
   return new Set([
     normalizedSongKey(track),
-    normalizeComparableText(trackTitle(track))
+    normalizeComparableText(trackTitle(track)),
+    ...normalizedTitleSegmentKeys(trackTitle(track))
   ].filter(Boolean));
 }
 
@@ -56,6 +57,32 @@ function stripAuthorPrefix(title, author) {
   }
 
   return title;
+}
+
+function normalizedTitleSegmentKeys(title) {
+  const cleanedTitle = removeVideoNoise(plainText(title));
+  const keys = [];
+
+  for (const separator of [' - ', ' \u2013 ', ' \u2014 ', ' | ', ': ']) {
+    const separatorIndex = cleanedTitle.indexOf(separator);
+
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const prefix = cleanedTitle.slice(0, separatorIndex);
+    const suffix = cleanedTitle.slice(separatorIndex + separator.length);
+
+    if (looksLikeArtistCredit(prefix)) {
+      keys.push(normalizeComparableText(suffix));
+    }
+  }
+
+  return keys;
+}
+
+function looksLikeArtistCredit(value) {
+  return /\s(&|x|\+|,|feat\.?|ft\.?|with)\s/i.test(value);
 }
 
 function stripAuthorSuffix(title, author) {

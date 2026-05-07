@@ -2,6 +2,7 @@ import { QueryType } from 'discord-player';
 import { YoutubeExtractor } from 'discord-player-youtube';
 
 const SPOTIFY_QUERY_TYPES = new Set([
+  QueryType.FILE,
   QueryType.SPOTIFY_ALBUM,
   QueryType.SPOTIFY_PLAYLIST,
   QueryType.SPOTIFY_SONG,

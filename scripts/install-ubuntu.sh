@@ -59,7 +59,7 @@ install_base_packages() {
 
 node_is_compatible() {
   command -v node >/dev/null 2>&1 \
-    && node -e "const [major, minor] = process.versions.node.split('.').map(Number); process.exit(major > 20 || (major === 20 && minor >= 11) ? 0 : 1);"
+    && node -e "const [major, minor] = process.versions.node.split('.').map(Number); process.exit(major > 20 || (major === 20 && minor >= 19) ? 0 : 1);"
 }
 
 install_node() {
@@ -71,7 +71,7 @@ install_node() {
   log "Installing Node.js ${NODE_MAJOR}.x from NodeSource..."
   curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | sudo_cmd bash -
   sudo_cmd apt-get install -y nodejs
-  node_is_compatible || fail "Node.js installation did not provide version >= 20.11.0."
+  node_is_compatible || fail "Node.js installation did not provide version >= 20.19.0."
 }
 
 install_pnpm() {

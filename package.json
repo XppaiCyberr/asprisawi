@@ -5,12 +5,13 @@
   "type": "module",
   "description": "A Discord slash-command music bot powered by discord-player.",
   "engines": {
-    "node": ">=20.11.0"
+    "node": ">=20.19.0"
   },
   "scripts": {
     "start": "node src/index.js",
     "register": "node src/deploy-commands.js",
-    "check": "node scripts/check-syntax.js"
+    "check": "node scripts/check-syntax.js && node --test",
+    "test": "node --test"
   },
   "dependencies": {
     "@discord-player/extractor": "^7.2.0",
@@ -19,7 +20,16 @@
     "discord-player": "^7.2.0",
     "discord-player-youtube": "^0.8.4",
     "discord.js": "^14.26.4",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "msedge-tts": "^2.0.5"
   },
-  "packageManager": "pnpm@10.33.3+sha512.a19744364a7e248b92657a4ca5973f9354d21caf982579674b1c539f32c7420c47138ad8b1254df07aba9bc782d9b3029e3db34d5dbff974326eb74dac8ff489"
+  "packageManager": "pnpm@10.33.3+sha512.a19744364a7e248b92657a4ca5973f9354d21caf982579674b1c539f32c7420c47138ad8b1254df07aba9bc782d9b3029e3db34d5dbff974326eb74dac8ff489",
+  "pnpm": {
+    "overrides": {
+      "file-type": "21.3.2"
+    },
+    "patchedDependencies": {
+      "@discord-player/extractor@7.2.0": "patches/@discord-player__extractor@7.2.0.patch"
+    }
+  }
 }
