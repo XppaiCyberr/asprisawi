@@ -72,7 +72,7 @@ Minimum permission integer for those four permissions:
 Manual invite URL format:
 
 ```text
-https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=3148800&scope=bot%20applications.commands
+https://discord.com/oauth2/authorize?client_id=1502034685134639284&permissions=3148800&scope=bot%20applications.commands
 ```
 
 Replace `YOUR_CLIENT_ID` with the Application ID, open the URL, and choose your server. If the bot will use private text or voice channels, make sure the bot role is also allowed to view/send/connect/speak in those channel overrides.
