@@ -1,4 +1,5 @@
 import { MessageFlags } from 'discord.js';
+import { QueueRepeatMode } from 'discord-player';
 import { statusMessage } from './embeds.js';
 import { MUSIC_CONTROL_IDS, MUSIC_CONTROL_PREFIX } from './music-components.js';
 import { respond } from './replies.js';
@@ -56,8 +57,9 @@ export async function handleMusicControlInteraction(interaction, player, isAutho
 }
 
 export function stopQueuePlayback(queue) {
-  queue.clear();
-  return queue.node.stop(true);
+  queue.options.leaveOnStop = false;
+  queue.setRepeatMode(QueueRepeatMode.OFF);
+  return queue.node.stop(false);
 }
 
 async function previousTrack(interaction, queue) {

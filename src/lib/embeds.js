@@ -74,6 +74,78 @@ export function trackStatusMessage(title, track, color = 'neutral', options = {}
   return statusMessage(title, trackMarkdown(track), color, options);
 }
 
+export function addedTrackMessage(result, requester) {
+  const details = addedTrackDetails(result);
+  const embed = new EmbedBuilder()
+    .setColor(resolveColor('queued'))
+    .setTitle('Added Track')
+    .addFields(
+      {
+        name: 'Track',
+        value: trackMarkdown(result.track),
+        inline: false
+      },
+      {
+        name: 'Estimated time until played',
+        value: details.estimatedUntilPlayed,
+        inline: true
+      },
+      {
+        name: 'Track Length',
+        value: details.trackLength,
+        inline: true
+      },
+      {
+        name: 'Position in upcoming',
+        value: details.positionInUpcoming,
+        inline: true
+      },
+      {
+        name: 'Position in queue',
+        value: details.positionInQueue,
+        inline: true
+      }
+    )
+    .setTimestamp();
+
+  if (requester) {
+    embed.setFooter({
+      text: `Requested by ${requester.globalName ?? requester.username ?? requester.id}`,
+      iconURL: requester.displayAvatarURL?.()
+    });
+  }
+
+  return {
+    embeds: [embed],
+    components: musicPlayerControls()
+  };
+}
+
+export function addedTrackDetails(result) {
+  const queue = result.queue;
+  const upcomingTracks = queue?.tracks?.toArray?.() ?? [];
+  const trackIndex = upcomingTracks.findIndex((track) => isSameTrack(track, result.track));
+  const upcomingIndex = trackIndex >= 0
+    ? trackIndex
+    : Math.max(0, upcomingTracks.length - 1);
+  const hasCurrentTrack = Boolean(queue?.currentTrack);
+  const positionInUpcoming = upcomingIndex === 0 ? 'Next' : String(upcomingIndex + 1);
+  const positionInQueue = String(upcomingIndex + (hasCurrentTrack ? 2 : 1));
+
+  return {
+    estimatedUntilPlayed: formatDuration(estimatedTimeUntilTrackMs(queue, upcomingIndex)),
+    positionInQueue,
+    positionInUpcoming,
+    trackLength: trackLength(result.track)
+  };
+}
+
+function isSameTrack(left, right) {
+  return left === right
+    || (left?.id && left.id === right?.id)
+    || (left?.url && left.url === right?.url && left?.title === right?.title);
+}
+
 function statusTitle(title, emoji) {
   if (emoji === false) {
     return title;
@@ -102,4 +174,61 @@ function trimEmbedDescription(description, limit = 4000) {
   }
 
   return `${content.slice(0, limit - 20)}\n...and more.`;
+}
+
+function estimatedTimeUntilTrackMs(queue, upcomingIndex) {
+  if (!queue?.currentTrack) {
+    return 0;
+  }
+
+  const timestamp = queue.node?.getTimestamp?.();
+  const currentRemaining = Number.isFinite(timestamp?.total?.value) && Number.isFinite(timestamp?.current?.value)
+    ? Math.max(0, timestamp.total.value - timestamp.current.value)
+    : trackDurationMs(queue.currentTrack);
+  const tracksBefore = queue.tracks
+    ?.toArray?.()
+    ?.slice(0, upcomingIndex)
+    ?.reduce((total, track) => total + trackDurationMs(track), 0) ?? 0;
+
+  return currentRemaining + tracksBefore;
+}
+
+function trackLength(track) {
+  const durationMs = trackDurationMs(track);
+
+  if (durationMs > 0) {
+    return formatDuration(durationMs);
+  }
+
+  return track?.duration || 'Unknown';
+}
+
+function trackDurationMs(track) {
+  if (Number.isFinite(track?.durationMS) && track.durationMS > 0) {
+    return track.durationMS;
+  }
+
+  const parts = String(track?.duration ?? '')
+    .split(':')
+    .map((part) => Number.parseInt(part, 10));
+
+  if (!parts.length || parts.some((part) => !Number.isFinite(part))) {
+    return 0;
+  }
+
+  return parts.reduce((total, part) => total * 60 + part, 0) * 1000;
+}
+
+function formatDuration(durationMs) {
+  const totalSeconds = Math.max(0, Math.round(durationMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor(totalSeconds % 3600 / 60);
+  const seconds = totalSeconds % 60;
+  const segments = hours > 0
+    ? [hours, minutes, seconds]
+    : [minutes, seconds];
+
+  return segments
+    .map((segment) => String(segment).padStart(2, '0'))
+    .join(':');
 }

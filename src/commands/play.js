@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { QueueRepeatMode, useMainPlayer } from 'discord-player';
-import { statusMessage } from '../lib/embeds.js';
+import { addedTrackMessage, statusMessage } from '../lib/embeds.js';
 import { trackMarkdown } from '../lib/format.js';
 import { getDefaultSearchSource, isAutoplayEnabled } from '../lib/guild-settings.js';
 import { createPlaybackStatus } from '../lib/playback-status.js';
@@ -157,7 +157,5 @@ function playResultMessage(result) {
     );
   }
 
-  return statusMessage('Queued', trackMarkdown(result.track), 'queued', {
-    controls: true
-  });
+  return addedTrackMessage(result, result.track?.requestedBy ?? result.queue?.metadata?.requestedBy);
 }
