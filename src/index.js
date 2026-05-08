@@ -7,6 +7,7 @@ import { chooseAutoplayTrack } from './lib/autoplay.js';
 import { loadCommands } from './lib/command-loader.js';
 import { statusMessage, trackStatusMessage } from './lib/embeds.js';
 import { getTtsSettings, loadGuildSettings } from './lib/guild-settings.js';
+import { loginWithRetry } from './lib/login-retry.js';
 import { handleMusicControlInteraction, isMusicControlInteraction } from './lib/player-controls.js';
 import { DEFAULT_COMMAND_PREFIX, handlePrefixCommandMessage } from './lib/prefix-commands.js';
 import { respond, safeRespond, suppressEmbeds } from './lib/replies.js';
@@ -254,7 +255,7 @@ player.events.on('debug', (queue, message) => {
   }
 });
 
-await client.login(process.env.DISCORD_TOKEN);
+await loginWithRetry(client, process.env.DISCORD_TOKEN);
 
 function isAuthorizedInteraction(interaction) {
   if (authorizedRoleIds.size === 0) {

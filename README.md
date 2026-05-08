@@ -334,6 +334,8 @@ GUILD_SETTINGS_PATH=/var/lib/asprisawi/guild-settings.json
 
 If you see `You must be signed in to perform this operation`, add `YOUTUBE_COOKIE` to `.env`, restart the bot, then try again.
 
+If startup fails with `Service Unavailable` for `https://discord.com/api/v10/gateway/bot`, Discord's REST API or your server's route to Discord is unavailable. The bot retries transient 5xx and network login errors automatically; check [Discord Status](https://discordstatus.com/) and test connectivity with `curl -I --connect-timeout 10 https://discord.com`.
+
 If commands do not appear, run `pnpm run register` again and confirm the bot was invited with the `applications.commands` scope.
 
 If `?` prefix commands do not respond, or `/tts` says setup is required or does not read chat messages, enable **Message Content Intent** in the Discord Developer Portal, set `ENABLE_MESSAGE_CONTENT_INTENT=true` in `.env`, restart the bot, and confirm you enabled TTS in the same text channel where users are chatting.
