@@ -7,6 +7,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 ## Features
 
 - Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
+- `?` prefix text commands are supported for the same bot commands, such as `?play`, `?stop`, and `?leave`.
 - `/lyric` shows lyrics for the currently playing song using LRCLIB through Discord Player, without adding an API key.
 - Music player messages include buttons for previous, pause/resume, skip, and stop.
 - `/tts` can read user chat messages into a voice channel using Microsoft Edge TTS without a paid API key.
@@ -46,7 +47,7 @@ The `img/` folder contains the bot artwork used for profiles, previews, and READ
 4. Open **Bot**.
 5. Create the bot user if Discord has not already created one.
 6. Copy or reset the bot token. This is `DISCORD_TOKEN`.
-7. To use automatic chat TTS, enable **Message Content Intent** under Privileged Gateway Intents. The other privileged intents can stay disabled.
+7. To use `?` prefix commands or automatic chat TTS, enable **Message Content Intent** under Privileged Gateway Intents. The other privileged intents can stay disabled.
 
 Keep the token private. Do not paste it into Discord chat, GitHub, or screenshots.
 
@@ -122,7 +123,7 @@ ENABLE_MESSAGE_CONTENT_INTENT=true
 
 `AUTHORIZED_ROLE_IDS` is optional. Leave it empty to allow everyone who can see the slash commands. To restrict the bot, enable Discord Developer Mode, right-click the allowed role, copy its ID, and put it there. Multiple roles can be comma-separated.
 
-Only set `ENABLE_MESSAGE_CONTENT_INTENT=true` after enabling **Message Content Intent** in the Discord Developer Portal. If the portal toggle is off, Discord rejects the gateway connection with `Used disallowed intents`.
+Only set `ENABLE_MESSAGE_CONTENT_INTENT=true` after enabling **Message Content Intent** in the Discord Developer Portal. This is required for `?` prefix commands and automatic chat TTS. If the portal toggle is off, Discord rejects the gateway connection with `Used disallowed intents`.
 
 ## Ubuntu Install
 
@@ -245,6 +246,8 @@ Loaded 16 commands.
 - `/stop` stops playback without leaving voice.
 - `/leave` stops playback and leaves voice. Only user ID `399562405249810433` can use it.
 
+Every command can also be used with the `?` prefix when Message Content Intent is enabled. Examples: `?play artist song name`, `?stop`, `?leave`, `?skip`, `?pause`, `?volume 75`, `?loop track`, `?autoplay off`, `?searchsource spotify`, and `?sawi hi sawi`.
+
 Examples:
 
 ```text
@@ -257,12 +260,15 @@ Examples:
 /tts enabled:true voice:en-US-AriaNeural
 /tts enabled:false
 /sawi question:hi sawi, how should I relax tonight?
+?play artist song name
+?stop
+?leave
 @BotName hi sawi, recommend a cozy song
 ```
 
 Plain text searches use YouTube by default. Use `/searchsource source:spotify` if you prefer Spotify metadata search, or `/searchsource source:auto` to let Discord Player choose. URLs still use their detected source.
 
-When `/tts` is enabled, the bot reads normal messages from the channel where you ran the command and speaks them in your current voice channel. It ignores bot and webhook messages. Generated TTS tracks do not post now-playing or queue-finished messages.
+When `/tts` is enabled, the bot reads normal messages from the channel where you ran the command and speaks them in your current voice channel. It ignores bot, webhook, system, and `?` prefix command messages. Generated TTS tracks do not post now-playing or queue-finished messages.
 
 You can also ask Sawi by mentioning the bot in chat, or by replying to a previous `Sawi says` message. Mentions work with the normal `GuildMessages` intent. Replies that do not ping the bot may also need Discord's Message Content intent.
 
@@ -295,6 +301,12 @@ Enable Discord Player debug logs:
 DEBUG_PLAYER=true
 ```
 
+Use a prefix other than `?` for text commands:
+
+```env
+COMMAND_PREFIX=!
+```
+
 Enable Sawi AI answers through Groq:
 
 ```env
@@ -310,7 +322,7 @@ Set the default voice for `/tts`:
 TTS_VOICE=id-ID-ArdiNeural
 ```
 
-`/tts` uses Microsoft Edge Read Aloud TTS through the `msedge-tts` package, so it does not need a Discord, OpenAI, Azure, or ElevenLabs API key. It still needs outbound network access to Microsoft's speech endpoint and Discord's Message Content intent. Enable that portal toggle, then set `ENABLE_MESSAGE_CONTENT_INTENT=true` in `.env`. Use an Edge TTS ShortName such as `id-ID-ArdiNeural`, `id-ID-GadisNeural`, or `en-US-AriaNeural`.
+`/tts` uses Microsoft Edge Read Aloud TTS through the `msedge-tts` package, so it does not need a Discord, OpenAI, Azure, or ElevenLabs API key. It still needs outbound network access to Microsoft's speech endpoint and Discord's Message Content intent. Prefix commands also need Message Content intent. Enable that portal toggle, then set `ENABLE_MESSAGE_CONTENT_INTENT=true` in `.env`. Use an Edge TTS ShortName such as `id-ID-ArdiNeural`, `id-ID-GadisNeural`, or `en-US-AriaNeural`.
 
 Store persistent per-server settings somewhere other than `data/guild-settings.json`:
 
@@ -324,7 +336,7 @@ If you see `You must be signed in to perform this operation`, add `YOUTUBE_COOKI
 
 If commands do not appear, run `pnpm run register` again and confirm the bot was invited with the `applications.commands` scope.
 
-If `/tts` says setup is required or does not read chat messages, enable **Message Content Intent** in the Discord Developer Portal, set `ENABLE_MESSAGE_CONTENT_INTENT=true` in `.env`, restart the bot, and confirm you enabled TTS in the same text channel where users are chatting.
+If `?` prefix commands do not respond, or `/tts` says setup is required or does not read chat messages, enable **Message Content Intent** in the Discord Developer Portal, set `ENABLE_MESSAGE_CONTENT_INTENT=true` in `.env`, restart the bot, and confirm you enabled TTS in the same text channel where users are chatting.
 
 If old commands still appear, they are usually registered in the other scope. Use `GUILD_ID` to register guild commands and clear globals, or use `CLEAR_GUILD_IDS` when registering global commands to clear old guild commands.
 

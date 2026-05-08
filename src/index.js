@@ -8,6 +8,7 @@ import { loadCommands } from './lib/command-loader.js';
 import { statusMessage, trackStatusMessage } from './lib/embeds.js';
 import { getTtsSettings, loadGuildSettings } from './lib/guild-settings.js';
 import { handleMusicControlInteraction, isMusicControlInteraction } from './lib/player-controls.js';
+import { DEFAULT_COMMAND_PREFIX, handlePrefixCommandMessage } from './lib/prefix-commands.js';
 import { respond, safeRespond, suppressEmbeds } from './lib/replies.js';
 import { askSawi, normalizeSawiQuestion } from './lib/sawi-ai.js';
 import { cleanAuthorName, cleanTrackTitle, plainText } from './lib/track-cleanup.js';
@@ -33,7 +34,7 @@ const clientIntents = [
 if (isAutomaticTtsConfigured()) {
   clientIntents.push(GatewayIntentBits.MessageContent);
 } else {
-  console.warn('Automatic chat TTS is disabled. Set ENABLE_MESSAGE_CONTENT_INTENT=true after enabling Message Content Intent in the Discord Developer Portal. Mention/reply AI still works for messages Discord exposes to the bot.');
+  console.warn(`Automatic chat TTS and ${DEFAULT_COMMAND_PREFIX} prefix commands are disabled. Set ENABLE_MESSAGE_CONTENT_INTENT=true after enabling Message Content Intent in the Discord Developer Portal. Mention/reply AI still works for messages Discord exposes to the bot.`);
 }
 
 const client = new Client({ intents: clientIntents });
@@ -142,6 +143,14 @@ async function handleInteraction(interaction) {
 }
 
 client.on(Events.MessageCreate, async (message) => {
+  if (await handlePrefixCommandMessage(message, {
+    commands: client.commands,
+    isAuthorized: isAuthorizedMessage,
+    player
+  })) {
+    return;
+  }
+
   if (await handleSawiMessage(message)) {
     return;
   }
