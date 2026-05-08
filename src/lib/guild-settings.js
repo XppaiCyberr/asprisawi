@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const defaultSettingsPath = path.join(projectRoot, 'data', 'guild-settings.json');
-export const DEFAULT_SEARCH_SOURCE = 'spotify';
+export const DEFAULT_SEARCH_SOURCE = 'youtube';
 export const SEARCH_SOURCES = new Set(['auto', 'spotify', 'youtube']);
 const guildSettings = new Map();
 let loaded = false;

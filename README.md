@@ -7,10 +7,12 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 ## Features
 
 - Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
+- `/lyric` shows lyrics for the currently playing song using LRCLIB through Discord Player, without adding an API key.
 - `/tts` can read user chat messages into a voice channel using Microsoft Edge TTS without a paid API key.
 - `/sawi` lets users ask Sawi questions through Groq's OpenAI-compatible chat API.
-- Plain text `/play` searches default to Spotify, and `/searchsource` can switch a server to YouTube or automatic search.
+- Plain text `/play` searches default to YouTube, and `/searchsource` can switch a server to Spotify or automatic search.
 - Supports YouTube URLs/searches, YouTube Music URLs, Spotify track/album/playlist URLs, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
+- YouTube search and autoplay filter out Shorts-style clips and obvious non-music videos before queueing.
 - Autoplay uses related recommendations and filters duplicate song titles from other channels/uploads.
 - Shows presence with bot uptime, and adds the current track, artist, and requester while music is active.
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
@@ -220,13 +222,14 @@ You should see a log like:
 
 ```text
 Logged in as BotName#0000.
-Loaded 14 commands.
+Loaded 15 commands.
 ```
 
 ## Commands
 
 - `/play query:<song, URL, or playlist>` queues music in your voice channel.
 - `/nowplaying` shows the active track.
+- `/lyric` shows lyrics for the current track.
 - `/queue` shows the current track and next tracks.
 - `/pause` toggles pause/resume.
 - `/skip` skips the current track.
@@ -247,6 +250,7 @@ Examples:
 /play query:https://music.youtube.com/watch?v=VIDEO_ID
 /play query:https://open.spotify.com/playlist/PLAYLIST_ID
 /play query:artist song name
+/lyric
 /tts enabled:true
 /tts enabled:true voice:en-US-AriaNeural
 /tts enabled:false
@@ -254,7 +258,7 @@ Examples:
 @BotName hi sawi, recommend a cozy song
 ```
 
-Plain text searches use Spotify by default and fall back to YouTube when Spotify returns no results. Use `/searchsource source:youtube` if you prefer YouTube search, or `/searchsource source:auto` to let Discord Player choose. URLs still use their detected source.
+Plain text searches use YouTube by default. Use `/searchsource source:spotify` if you prefer Spotify metadata search, or `/searchsource source:auto` to let Discord Player choose. URLs still use their detected source.
 
 When `/tts` is enabled, the bot reads normal messages from the channel where you ran the command and speaks them in your current voice channel. It ignores bot and webhook messages. Generated TTS tracks do not post now-playing or queue-finished messages.
 
