@@ -24,6 +24,7 @@ const PREFIX_USAGE = {
   help: '?help',
   loop: '?loop <off|track|queue|autoplay>',
   play: '?play <song, URL, or playlist>',
+  rank: '?rank [limit]',
   sawi: '?sawi <question>',
   searchsource: '?searchsource <youtube|spotify|auto>',
   status: '?status',
@@ -191,6 +192,10 @@ function prefixOptionValues(commandName, rawArgs) {
       return {
         query: requiredText(rawArgs, 'query')
       };
+    case 'rank':
+      return {
+        limit: firstArg ? parseRankLimit(firstArg) : null
+      };
     case 'sawi':
       return {
         question: requiredText(rawArgs, 'question')
@@ -262,6 +267,16 @@ function parseVolume(value) {
   }
 
   return volume;
+}
+
+function parseRankLimit(value) {
+  const limit = Number.parseInt(value, 10);
+
+  if (!Number.isInteger(limit) || limit < 1 || limit > 25) {
+    throw new Error('limit must be a number from 1 to 25.');
+  }
+
+  return limit;
 }
 
 function ttsOptions(rawArgs) {

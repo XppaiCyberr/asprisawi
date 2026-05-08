@@ -31,6 +31,7 @@ const commandGroups = [
     name: 'Extras',
     commands: [
       ['lyric', 'Show lyrics for the current track'],
+      ['rank [limit]', 'Show voice call time rankings'],
       ['sawi <question>', 'Ask Sawi a question'],
       ['status', 'Show bot setup and playback health'],
       ['help', 'Show this command list']

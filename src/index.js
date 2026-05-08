@@ -14,6 +14,7 @@ import { respond, safeRespond, suppressEmbeds } from './lib/replies.js';
 import { askSawi, normalizeSawiQuestion } from './lib/sawi-ai.js';
 import { cleanAuthorName, cleanTrackTitle, plainText } from './lib/track-cleanup.js';
 import { cleanupTtsTrack, isAutomaticTtsConfigured, isSilentTtsTrack, MAX_TTS_TEXT_LENGTH, normalizeTtsText, playTts, scheduleTtsQueueCleanup, scheduleTtsTrackCleanup } from './lib/tts.js';
+import { handleVoiceStateUpdate, initializeActiveVoiceSessions, loadVoiceStats } from './lib/voice-rank.js';
 import { SpotifyAwareYoutubeExtractor } from './lib/youtube-extractor.js';
 
 dotenv.config({ quiet: true });
@@ -50,6 +51,7 @@ let warnedMissingMessageContent = false;
 
 const player = new Player(client);
 await loadGuildSettings();
+await loadVoiceStats();
 process.env.DOTENV_CONFIG_QUIET ??= 'true';
 await player.extractors.register(SpotifyAwareYoutubeExtractor, {
   cookie: process.env.YOUTUBE_COOKIE,
@@ -67,12 +69,15 @@ for (const command of await loadCommands()) {
   client.commands.set(command.data.name, command);
 }
 
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}.`);
   console.log(`Loaded ${client.commands.size} commands.`);
   console.log(authorizedRoleIds.size > 0
     ? `Command access restricted to ${authorizedRoleIds.size} role ID(s).`
     : 'Command access is unrestricted. Set AUTHORIZED_ROLE_IDS to restrict it.');
+  await initializeActiveVoiceSessions(readyClient).catch((error) => {
+    console.error('Failed to initialize active voice sessions:', error);
+  });
   updatePresence();
   const presenceTimer = setInterval(updatePresence, 60000);
   presenceTimer.unref?.();
@@ -161,6 +166,12 @@ client.on(Events.MessageCreate, async (message) => {
   }
 
   queueTtsMessage(message);
+});
+
+client.on(Events.VoiceStateUpdate, (oldState, newState) => {
+  handleVoiceStateUpdate(oldState, newState).catch((error) => {
+    console.error('Voice state tracking failed:', error);
+  });
 });
 
 player.events.on('playerStart', async (queue, track) => {

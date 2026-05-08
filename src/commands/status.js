@@ -5,6 +5,7 @@ import { trackSummary } from '../lib/format.js';
 import { getDefaultSearchSource, getTtsSettings, isAutoplayEnabled } from '../lib/guild-settings.js';
 import { respond } from '../lib/replies.js';
 import { DEFAULT_TTS_VOICE, isAutomaticTtsConfigured } from '../lib/tts.js';
+import { activeVoiceSessionCount } from '../lib/voice-rank.js';
 
 const searchSourceNames = {
   auto: 'Automatic',
@@ -54,6 +55,13 @@ export async function execute(interaction) {
             ['Current', trimFieldValue(trackSummary(currentTrack), 300)],
             ['Upcoming', String(upcomingCount)],
             ['Voice channel', queue?.channel ? String(queue.channel) : 'not connected']
+          ])
+        },
+        {
+          name: 'Voice tracking',
+          value: lines([
+            ['Active voice sessions', String(activeVoiceSessionCount(interaction.guildId))],
+            ['Ranking command', '`/rank`']
           ])
         }
       ]
