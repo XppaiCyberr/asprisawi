@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const defaultVoiceStatsPath = path.join(projectRoot, 'data', 'voice-stats.json');
+export const DEFAULT_TRACKED_VOICE_CHANNEL_IDS = ['1501852386052931754'];
 const guildVoiceStats = new Map();
 let loaded = false;
 let loadPromise = null;
@@ -31,7 +32,7 @@ export async function initializeActiveVoiceSessions(client, now = Date.now()) {
     for (const voiceState of guild.voiceStates.cache.values()) {
       const info = voiceStateInfo(voiceState);
 
-      if (voiceState.channelId && info && !info.isBot) {
+      if (info?.channelId && !info.isBot && isTrackedVoiceChannel(info.channelId)) {
         startVoiceSession(info, now);
       }
     }
@@ -52,23 +53,25 @@ export async function handleVoiceStateUpdate(oldState, newState, now = Date.now(
 export function applyVoiceStateUpdate(oldState, newState, now = Date.now()) {
   const oldChannelId = oldState?.channelId ?? null;
   const newChannelId = newState?.channelId ?? null;
+  const wasTracked = isTrackedVoiceChannel(oldChannelId);
+  const isTracked = isTrackedVoiceChannel(newChannelId);
 
-  if (oldChannelId === newChannelId) {
+  if (oldChannelId === newChannelId || (!wasTracked && !isTracked)) {
     return false;
   }
 
-  const info = voiceStateInfo(newChannelId ? newState : oldState);
+  const info = voiceStateInfo(isTracked ? newState : oldState);
 
   if (!info || info.isBot) {
     return false;
   }
 
-  if (!oldChannelId && newChannelId) {
+  if (!wasTracked && isTracked) {
     startVoiceSession({ ...info, channelId: newChannelId }, now);
     return false;
   }
 
-  if (oldChannelId && !newChannelId) {
+  if (wasTracked && !isTracked) {
     return endVoiceSession(info, now);
   }
 
@@ -103,6 +106,15 @@ export function voiceRank(guildId, options = {}) {
 
 export function activeVoiceSessionCount(guildId) {
   return getGuildVoiceStats(guildId).active.size;
+}
+
+export function trackedVoiceChannelIds() {
+  const configured = parseIds(process.env.VOICE_TRACKED_CHANNEL_IDS);
+  return configured.length ? configured : DEFAULT_TRACKED_VOICE_CHANNEL_IDS;
+}
+
+export function isTrackedVoiceChannel(channelId) {
+  return Boolean(channelId && trackedVoiceChannelIds().includes(String(channelId)));
 }
 
 export function formatVoiceDuration(durationMs) {
@@ -345,4 +357,11 @@ function normalizeTimestamp(value) {
 function clampLimit(value) {
   const limit = Math.floor(Number(value) || 10);
   return Math.max(1, Math.min(25, limit));
+}
+
+function parseIds(value) {
+  return String(value ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
 }
