@@ -45,6 +45,10 @@ export function fallbackSearchEngineForQuery(query, defaultSearchSource = DEFAUL
     : undefined;
 }
 
+export function isPlainPlaybackSearch(query) {
+  return !isUrl(query) && !spotifyQueryType(query);
+}
+
 function spotifyQueryType(query) {
   const value = String(query).trim();
   const uriMatch = /^spotify:(track|album|playlist):[A-Za-z0-9]+/i.exec(value);

@@ -21,10 +21,12 @@ const BOOLEAN_VALUES = {
 };
 const PREFIX_USAGE = {
   autoplay: '?autoplay [on|off]',
+  help: '?help',
   loop: '?loop <off|track|queue|autoplay>',
   play: '?play <song, URL, or playlist>',
   sawi: '?sawi <question>',
   searchsource: '?searchsource <youtube|spotify|auto>',
+  status: '?status',
   tts: '?tts [on|off] [voice]',
   volume: '?volume <0-100>'
 };
@@ -122,6 +124,7 @@ export function createPrefixInteraction(message, parsed) {
   const interaction = {
     channel: message.channel,
     channelId: message.channelId,
+    client: message.client,
     commandName: parsed.commandName,
     deferred: false,
     guild: message.guild,

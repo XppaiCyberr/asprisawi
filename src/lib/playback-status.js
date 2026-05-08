@@ -20,10 +20,10 @@ export function createPlaybackStatus(interaction) {
           message = await interaction.editReply(body);
         }
 
-        return true;
+        return message;
       } catch (error) {
         console.error('Failed to update playback status message:', error);
-        return false;
+        return null;
       }
     }
   };

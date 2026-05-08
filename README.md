@@ -9,10 +9,12 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
 - `?` prefix text commands are supported for the same bot commands, such as `?play`, `?stop`, and `?leave`.
 - `/lyric` shows lyrics for the currently playing song using LRCLIB through Discord Player, without adding an API key.
+- `/help` shows command usage, and `/status` shows bot setup, guild settings, and playback health.
 - Music player messages include buttons for previous, pause/resume, skip, and stop.
 - `/tts` can read user chat messages into a voice channel using Microsoft Edge TTS without a paid API key.
 - `/sawi` lets users ask Sawi questions through Groq's OpenAI-compatible chat API.
 - Plain text `/play` searches default to YouTube, and `/searchsource` can switch a server to Spotify or automatic search.
+- Plain text `/play` searches show a top-result picker before queueing, while URLs and playlists still play directly.
 - Supports YouTube URLs/searches, YouTube Music URLs, Spotify track/album/playlist URLs, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
 - YouTube search and autoplay filter out Shorts-style clips and obvious non-music videos before queueing.
 - Autoplay uses related recommendations and filters duplicate song titles from other channels/uploads.

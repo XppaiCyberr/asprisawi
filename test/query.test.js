@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { QueryType } from 'discord-player';
 import { test } from 'node:test';
-import { fallbackSearchEngineForQuery, normalizePlaybackQuery, searchEngineForQuery } from '../src/lib/query.js';
+import { fallbackSearchEngineForQuery, isPlainPlaybackSearch, normalizePlaybackQuery, searchEngineForQuery } from '../src/lib/query.js';
 
 test('normalizes mobile and music YouTube URLs to regular YouTube URLs', () => {
   assert.equal(
@@ -41,4 +41,11 @@ test('falls back from Spotify plain text search to YouTube search', () => {
   assert.equal(fallbackSearchEngineForQuery('malu malu', 'youtube'), undefined);
   assert.equal(fallbackSearchEngineForQuery('https://open.spotify.com/track/abc123'), undefined);
   assert.equal(fallbackSearchEngineForQuery('https://www.youtube.com/watch?v=abc123'), undefined);
+});
+
+test('identifies plain text playback searches', () => {
+  assert.equal(isPlainPlaybackSearch('lofi hip hop'), true);
+  assert.equal(isPlainPlaybackSearch('https://www.youtube.com/watch?v=abc123'), false);
+  assert.equal(isPlainPlaybackSearch('https://open.spotify.com/track/abc123'), false);
+  assert.equal(isPlainPlaybackSearch('spotify:track:abc123'), false);
 });
