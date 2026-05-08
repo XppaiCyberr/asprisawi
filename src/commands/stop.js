@@ -1,12 +1,13 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { useQueue } from 'discord-player';
 import { statusMessage } from '../lib/embeds.js';
+import { stopQueuePlayback } from '../lib/player-controls.js';
 import { respond } from '../lib/replies.js';
 import { requireSameVoiceChannel } from '../lib/voice.js';
 
 export const data = new SlashCommandBuilder()
   .setName('stop')
-  .setDescription('Stop playback and leave voice');
+  .setDescription('Stop playback without leaving voice');
 
 export async function execute(interaction) {
   const queue = useQueue();
@@ -23,6 +24,6 @@ export async function execute(interaction) {
     return;
   }
 
-  queue.delete();
-  await respond(interaction, statusMessage('Stopped', 'Stopped playback and left voice.', 'stopped'));
+  stopQueuePlayback(queue);
+  await respond(interaction, statusMessage('Stopped', 'Stopped playback. I will stay in the voice channel.', 'stopped'));
 }

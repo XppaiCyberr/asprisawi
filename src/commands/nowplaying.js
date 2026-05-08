@@ -16,5 +16,7 @@ export async function execute(interaction) {
     return;
   }
 
-  await respond(interaction, trackStatusMessage('Now playing', currentTrack, 'playing'));
+  await respond(interaction, trackStatusMessage('Now playing', currentTrack, 'playing', {
+    controls: true
+  }));
 }

@@ -152,9 +152,12 @@ function playResultMessage(result) {
     return statusMessage(
       'Queued playlist',
       `Queued ${trackCount} tracks from **${playlist.title}**.\nFirst: ${trackMarkdown(result.track)}`,
-      'queued'
+      'queued',
+      { controls: true }
     );
   }
 
-  return statusMessage('Queued', trackMarkdown(result.track), 'queued');
+  return statusMessage('Queued', trackMarkdown(result.track), 'queued', {
+    controls: true
+  });
 }

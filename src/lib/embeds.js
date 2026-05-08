@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { trackMarkdown } from './format.js';
+import { musicPlayerControls } from './music-components.js';
 
 export const STATUS_COLORS = {
   playing: 0x22c55e,
@@ -64,6 +65,7 @@ export function statusMessage(title, description, color = 'neutral', options = {
 
   return {
     embeds: [embed],
+    ...(options.controls ? { components: musicPlayerControls() } : {}),
     ...(options.flags === undefined ? {} : { flags: options.flags })
   };
 }

@@ -8,6 +8,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 
 - Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
 - `/lyric` shows lyrics for the currently playing song using LRCLIB through Discord Player, without adding an API key.
+- Music player messages include buttons for previous, pause/resume, skip, and stop.
 - `/tts` can read user chat messages into a voice channel using Microsoft Edge TTS without a paid API key.
 - `/sawi` lets users ask Sawi questions through Groq's OpenAI-compatible chat API.
 - Plain text `/play` searches default to YouTube, and `/searchsource` can switch a server to Spotify or automatic search.
@@ -18,7 +19,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Suppresses link embeds so YouTube and playlist URLs do not expand into large web previews.
 - Uses emoji-labeled, color-coded Discord embeds for bot messages: playing is green, skipped is blue, stopped/errors are red, and queued is amber.
 - Edits a track's queued status into now-playing, then posts a new message for each new track so chat keeps playback history.
-- Stays in the voice channel by default; use `/stop` when you want it to leave.
+- Stays in the voice channel by default; `/stop` stops music without leaving, and owner-only `/leave` disconnects it.
 - Supports Windows and Ubuntu/Linux. Uses bundled `@ffmpeg-installer/ffmpeg` by default, or system `ffmpeg` when `FFMPEG_PATH` is set.
 - Cleans stale slash commands from older deployments when registering guild commands.
 - Optionally restricts slash command usage to specific Discord role IDs.
@@ -222,7 +223,7 @@ You should see a log like:
 
 ```text
 Logged in as BotName#0000.
-Loaded 15 commands.
+Loaded 16 commands.
 ```
 
 ## Commands
@@ -241,7 +242,8 @@ Loaded 15 commands.
 - `/volume level:<0-100>` changes player volume.
 - `/tts enabled:<true|false> voice:<optional Edge TTS ShortName>` toggles automatic TTS for this text channel and your voice channel.
 - `/sawi question:<question>` asks Sawi a question.
-- `/stop` stops playback and leaves voice.
+- `/stop` stops playback without leaving voice.
+- `/leave` stops playback and leaves voice. Only user ID `399562405249810433` can use it.
 
 Examples:
 

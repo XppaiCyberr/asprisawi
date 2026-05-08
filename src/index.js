@@ -7,6 +7,7 @@ import { chooseAutoplayTrack } from './lib/autoplay.js';
 import { loadCommands } from './lib/command-loader.js';
 import { statusMessage, trackStatusMessage } from './lib/embeds.js';
 import { getTtsSettings, loadGuildSettings } from './lib/guild-settings.js';
+import { handleMusicControlInteraction, isMusicControlInteraction } from './lib/player-controls.js';
 import { respond, suppressEmbeds } from './lib/replies.js';
 import { askSawi, normalizeSawiQuestion } from './lib/sawi-ai.js';
 import { cleanAuthorName, cleanTrackTitle, plainText } from './lib/track-cleanup.js';
@@ -76,6 +77,16 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (isMusicControlInteraction(interaction)) {
+    try {
+      await handleMusicControlInteraction(interaction, player, isAuthorizedInteraction);
+    } catch (error) {
+      console.error('Music control button failed:', error);
+      await respond(interaction, statusMessage('Command failed', 'That music control failed. Check the bot logs for details.', 'error'));
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) {
     return;
   }
@@ -85,7 +96,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  if (!isAuthorizedInteraction(interaction)) {
+  if (interaction.commandName !== 'leave' && !isAuthorizedInteraction(interaction)) {
     await respond(interaction, {
       ...statusMessage('Permission denied', 'You do not have permission to use this bot.', 'error'),
       flags: MessageFlags.Ephemeral
@@ -127,7 +138,9 @@ player.events.on('playerStart', async (queue, track) => {
     return;
   }
 
-  await updateTrackMessage(queue, track, trackStatusMessage('Now playing', track, 'playing'), 'playing');
+  await updateTrackMessage(queue, track, trackStatusMessage('Now playing', track, 'playing', {
+    controls: true
+  }), 'playing');
 });
 
 player.events.on('willAutoPlay', async (queue, tracks, done) => {
