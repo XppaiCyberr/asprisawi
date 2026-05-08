@@ -17,8 +17,8 @@ export const data = new SlashCommandBuilder()
       .setName('source')
       .setDescription('Source for plain text searches. Leave empty to show the current source.')
       .addChoices(
-        { name: 'Spotify', value: 'spotify' },
         { name: 'YouTube', value: 'youtube' },
+        { name: 'Spotify', value: 'spotify' },
         { name: 'Automatic', value: 'auto' }
       )
   );

@@ -19,7 +19,7 @@ test('guild settings persist autoplay to a JSON file', async () => {
 
     await settings.loadGuildSettings();
     assert.equal(settings.isAutoplayEnabled('guild-1'), false);
-    assert.equal(settings.getDefaultSearchSource('guild-1'), 'spotify');
+    assert.equal(settings.getDefaultSearchSource('guild-1'), 'youtube');
     assert.deepEqual(settings.getTtsSettings('guild-1'), {
       enabled: false,
       textChannelId: null,
@@ -76,7 +76,7 @@ test('guild settings persist autoplay to a JSON file', async () => {
   }
 });
 
-test('guild settings normalize invalid search source to Spotify', async () => {
+test('guild settings normalize invalid search source to YouTube', async () => {
   const directory = path.join(tmpdir(), `asprisawi-settings-${Date.now()}`);
   const settingsFile = path.join(directory, 'guild-settings.json');
   const previousPath = process.env.GUILD_SETTINGS_PATH;
@@ -87,7 +87,7 @@ test('guild settings normalize invalid search source to Spotify', async () => {
     const settings = await import(`${guildSettingsUrl}?invalid=${Date.now()}`);
 
     await settings.loadGuildSettings();
-    assert.equal(await settings.setDefaultSearchSource('guild-1', 'invalid'), 'spotify');
+    assert.equal(await settings.setDefaultSearchSource('guild-1', 'invalid'), 'youtube');
   } finally {
     if (previousPath === undefined) {
       delete process.env.GUILD_SETTINGS_PATH;
