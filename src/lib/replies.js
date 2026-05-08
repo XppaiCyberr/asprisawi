@@ -23,6 +23,16 @@ export async function respond(interaction, payload) {
   return interaction.reply(message);
 }
 
+export async function safeRespond(interaction, payload, context = 'interaction response') {
+  try {
+    await respond(interaction, payload);
+    return true;
+  } catch (error) {
+    console.error(`Failed to send ${context}:`, error);
+    return false;
+  }
+}
+
 function mergeMessageFlags(flags) {
   if (flags === undefined) {
     return MessageFlags.SuppressEmbeds;

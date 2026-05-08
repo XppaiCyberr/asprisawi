@@ -8,7 +8,7 @@ import { loadCommands } from './lib/command-loader.js';
 import { statusMessage, trackStatusMessage } from './lib/embeds.js';
 import { getTtsSettings, loadGuildSettings } from './lib/guild-settings.js';
 import { handleMusicControlInteraction, isMusicControlInteraction } from './lib/player-controls.js';
-import { respond, suppressEmbeds } from './lib/replies.js';
+import { respond, safeRespond, suppressEmbeds } from './lib/replies.js';
 import { askSawi, normalizeSawiQuestion } from './lib/sawi-ai.js';
 import { cleanAuthorName, cleanTrackTitle, plainText } from './lib/track-cleanup.js';
 import { cleanupTtsTrack, isAutomaticTtsConfigured, isSilentTtsTrack, MAX_TTS_TEXT_LENGTH, normalizeTtsText, playTts, scheduleTtsQueueCleanup, scheduleTtsTrackCleanup } from './lib/tts.js';
@@ -76,13 +76,31 @@ client.once(Events.ClientReady, (readyClient) => {
   presenceTimer.unref?.();
 });
 
-client.on(Events.InteractionCreate, async (interaction) => {
+client.on(Events.Error, (error) => {
+  console.error('Discord client error:', error);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason);
+});
+
+client.on(Events.InteractionCreate, (interaction) => {
+  handleInteraction(interaction).catch((error) => {
+    console.error('Interaction handler failed:', error);
+  });
+});
+
+async function handleInteraction(interaction) {
   if (isMusicControlInteraction(interaction)) {
     try {
       await handleMusicControlInteraction(interaction, player, isAuthorizedInteraction);
     } catch (error) {
       console.error('Music control button failed:', error);
-      await respond(interaction, statusMessage('Command failed', 'That music control failed. Check the bot logs for details.', 'error'));
+      await safeRespond(
+        interaction,
+        statusMessage('Command failed', 'That music control failed. Check the bot logs for details.', 'error'),
+        'music control error response'
+      );
     }
     return;
   }
@@ -92,22 +110,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   if (!interaction.inGuild()) {
-    await respond(interaction, statusMessage('Server only', 'Music commands only work inside a server.', 'warning'));
+    await safeRespond(interaction, statusMessage('Server only', 'Music commands only work inside a server.', 'warning'));
     return;
   }
 
   if (interaction.commandName !== 'leave' && !isAuthorizedInteraction(interaction)) {
-    await respond(interaction, {
+    await safeRespond(interaction, {
       ...statusMessage('Permission denied', 'You do not have permission to use this bot.', 'error'),
       flags: MessageFlags.Ephemeral
-    });
+    }, 'permission denied response');
     return;
   }
 
   const command = client.commands.get(interaction.commandName);
 
   if (!command) {
-    await respond(interaction, statusMessage('Unknown command', `Unknown command: ${interaction.commandName}`, 'warning'));
+    await safeRespond(interaction, statusMessage('Unknown command', `Unknown command: ${interaction.commandName}`, 'warning'));
     return;
   }
 
@@ -115,9 +133,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await player.context.provide({ guild: interaction.guild }, () => command.execute(interaction));
   } catch (error) {
     console.error(`Command ${interaction.commandName} failed:`, error);
-    await respond(interaction, statusMessage('Command failed', 'That command failed. Check the bot logs for details.', 'error'));
+    await safeRespond(
+      interaction,
+      statusMessage('Command failed', 'That command failed. Check the bot logs for details.', 'error'),
+      `${interaction.commandName} error response`
+    );
   }
-});
+}
 
 client.on(Events.MessageCreate, async (message) => {
   if (await handleSawiMessage(message)) {
