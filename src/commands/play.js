@@ -4,6 +4,7 @@ import { addedTrackMessage, statusMessage } from '../lib/embeds.js';
 import { trackMarkdown } from '../lib/format.js';
 import { getDefaultSearchSource, isAutoplayEnabled } from '../lib/guild-settings.js';
 import { createPlaybackStatus } from '../lib/playback-status.js';
+import { moveAddedSingleTrackNext } from '../lib/queue-position.js';
 import { fallbackSearchEngineForQuery, isPlainPlaybackSearch, normalizePlaybackQuery, searchEngineForQuery } from '../lib/query.js';
 import { respond } from '../lib/replies.js';
 import { cleanAuthorName, cleanTrackTitle, plainText } from '../lib/track-cleanup.js';
@@ -36,6 +37,8 @@ export async function execute(interaction) {
   const defaultSearchSource = getDefaultSearchSource(interaction.guildId);
   const primarySearchEngine = searchEngineForQuery(query, defaultSearchSource);
   const fallbackSearchEngine = fallbackSearchEngineForQuery(query, defaultSearchSource);
+  const existingQueue = player.nodes.get(interaction.guildId);
+  const queueWasActive = Boolean(existingQueue?.currentTrack || existingQueue?.isPlaying?.());
 
   await interaction.deferReply();
   const playbackStatus = createPlaybackStatus(interaction);
@@ -47,6 +50,7 @@ export async function execute(interaction) {
       playbackStatus,
       player,
       primarySearchEngine,
+      queueWasActive,
       query,
       voiceChannel: voice.voiceChannel
     };
@@ -109,11 +113,17 @@ async function playWithFallback(options) {
 }
 
 async function playWithSearchEngine(options, searchEngine) {
-  return options.player.play(options.voiceChannel, options.query, playerPlayOptions(options, searchEngine));
+  return finalizePlayPosition(
+    await options.player.play(options.voiceChannel, options.query, playerPlayOptions(options, searchEngine)),
+    options
+  );
 }
 
 async function playSearchResult(options, searchResult) {
-  return options.player.play(options.voiceChannel, searchResult, playerPlayOptions(options));
+  return finalizePlayPosition(
+    await options.player.play(options.voiceChannel, searchResult, playerPlayOptions(options)),
+    options
+  );
 }
 
 async function playSelectedTrack(options, track) {
@@ -121,7 +131,10 @@ async function playSelectedTrack(options, track) {
     track.requestedBy = options.interaction.user;
   }
 
-  return options.player.play(options.voiceChannel, [track], playerPlayOptions(options));
+  return finalizePlayPosition(
+    await options.player.play(options.voiceChannel, [track], playerPlayOptions(options)),
+    options
+  );
 }
 
 async function searchWithFallback(options) {
@@ -172,6 +185,11 @@ function playerPlayOptions(options, searchEngine) {
       volume: 75
     }
   };
+}
+
+function finalizePlayPosition(result, options) {
+  moveAddedSingleTrackNext(result, options.queueWasActive);
+  return result;
 }
 
 async function finishPlayResult(result, interaction, playbackStatus) {
