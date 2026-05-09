@@ -21,6 +21,7 @@ const BOOLEAN_VALUES = {
 };
 const PREFIX_USAGE = {
   autoplay: '?autoplay [on|off]',
+  clear: '?clear',
   help: '?help',
   loop: '?loop <off|track|queue|autoplay>',
   play: '?play <song, URL, or playlist>',
@@ -131,6 +132,7 @@ export function createPrefixInteraction(message, parsed) {
     guild: message.guild,
     guildId: message.guildId,
     member: message.member,
+    memberPermissions: message.member?.permissions,
     replied: false,
     user: message.author,
     inGuild: () => Boolean(message.guildId),

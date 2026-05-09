@@ -6,7 +6,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 
 ## Features
 
-- Slash commands for playback, queue control, loop modes, autoplay, shuffle, previous track, and volume.
+- Slash commands for playback, queue control, clearing upcoming tracks/playlists, loop modes, autoplay, shuffle, previous track, and volume.
 - `?` prefix text commands are supported for the same bot commands, such as `?play`, `?stop`, and `?leave`.
 - `/rank` tracks voice call time in channel `1501852386052931754` and ranks users by accumulated time, including active sessions.
 - `/lyric` shows lyrics for the currently playing song using LRCLIB through Discord Player, without adding an API key.

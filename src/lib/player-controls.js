@@ -1,4 +1,4 @@
-import { MessageFlags } from 'discord.js';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { QueueRepeatMode } from 'discord-player';
 import { statusMessage } from './embeds.js';
 import { MUSIC_CONTROL_IDS, MUSIC_CONTROL_PREFIX } from './music-components.js';
@@ -60,6 +60,61 @@ export function stopQueuePlayback(queue) {
   queue.options.leaveOnStop = false;
   queue.setRepeatMode(QueueRepeatMode.OFF);
   return queue.node.stop(false);
+}
+
+export function clearUpcomingTracks(queue) {
+  const clearedCount = queue?.tracks?.size ?? queue?.tracks?.toArray?.().length ?? 0;
+  const repeatModeCleared = queue?.repeatMode !== undefined && queue.repeatMode !== QueueRepeatMode.OFF;
+
+  queue?.tracks?.clear?.();
+
+  if (repeatModeCleared) {
+    queue.setRepeatMode(QueueRepeatMode.OFF);
+  }
+
+  return {
+    clearedCount,
+    repeatModeCleared
+  };
+}
+
+export function isLeaveAuthorized(interaction) {
+  if (leaveUserIds().has(interaction.user?.id)) {
+    return true;
+  }
+
+  if (interaction.memberPermissions?.has?.(PermissionFlagsBits.ManageGuild)) {
+    return true;
+  }
+
+  const allowedRoleIds = authorizedRoleIds();
+
+  if (allowedRoleIds.size === 0) {
+    return false;
+  }
+
+  const roles = interaction.member?.roles;
+
+  if (Array.isArray(roles)) {
+    return roles.some((roleId) => allowedRoleIds.has(roleId));
+  }
+
+  return Boolean(roles?.cache?.some((role) => allowedRoleIds.has(role.id)));
+}
+
+function leaveUserIds() {
+  return new Set(parseIds(`${LEAVE_USER_ID},${process.env.LEAVE_USER_IDS ?? ''},${process.env.BOT_OWNER_IDS ?? ''}`));
+}
+
+function authorizedRoleIds() {
+  return new Set(parseIds(`${process.env.AUTHORIZED_ROLE_IDS ?? ''},${process.env.ALLOWED_ROLE_IDS ?? ''}`));
+}
+
+function parseIds(value) {
+  return String(value ?? '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
 }
 
 async function previousTrack(interaction, queue) {

@@ -8,6 +8,7 @@ const commandGroups = [
     commands: [
       ['play <query>', 'Search, pick a result, and play or queue it'],
       ['queue', 'Show the current and upcoming tracks'],
+      ['clear', 'Clear all upcoming songs and playlists'],
       ['nowplaying', 'Show the current track with controls'],
       ['pause', 'Pause or resume playback'],
       ['skip', 'Skip the current track'],

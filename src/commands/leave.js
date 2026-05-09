@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
-import { useQueue } from 'discord-player';
+import { useMainPlayer } from 'discord-player';
 import { statusMessage } from '../lib/embeds.js';
-import { LEAVE_USER_ID } from '../lib/player-controls.js';
+import { isLeaveAuthorized } from '../lib/player-controls.js';
 import { respond } from '../lib/replies.js';
 
 export const data = new SlashCommandBuilder()
@@ -9,19 +9,29 @@ export const data = new SlashCommandBuilder()
   .setDescription('Make the bot leave voice');
 
 export async function execute(interaction) {
-  if (interaction.user.id !== LEAVE_USER_ID) {
+  if (!isLeaveAuthorized(interaction)) {
     await respond(interaction, {
-      ...statusMessage('Permission denied', 'Only the bot owner can make me leave voice.', 'error'),
+      ...statusMessage('Permission denied', 'Only the bot owner, server managers, or authorized bot roles can make me leave voice.', 'error'),
       flags: MessageFlags.Ephemeral
     });
     return;
   }
 
-  const queue = useQueue();
+  const player = useMainPlayer();
+  const queue = player.nodes.get(interaction.guildId);
 
   if (queue) {
-    queue.delete();
+    player.nodes.delete(queue);
     await respond(interaction, statusMessage('Left voice', 'Stopped playback and left the voice channel.', 'stopped'));
+    return;
+  }
+
+  const connection = player.voiceUtils.getConnection(interaction.guildId, interaction.client.user.id)
+    ?? player.voiceUtils.getConnection(interaction.guildId);
+
+  if (connection) {
+    player.voiceUtils.disconnect(connection);
+    await respond(interaction, statusMessage('Left voice', 'Disconnected from the voice channel.', 'stopped'));
     return;
   }
 
