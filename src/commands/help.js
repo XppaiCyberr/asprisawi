@@ -34,6 +34,7 @@ const commandGroups = [
       ['lyric', 'Show lyrics for the current track'],
       ['rank [limit]', 'Show voice call time rankings'],
       ['sawi <question>', 'Ask Sawi a question'],
+      ['semangat', 'Send today\'s motivation to the semangat channel'],
       ['status', 'Show bot setup and playback health'],
       ['help', 'Show this command list']
     ]

@@ -14,6 +14,7 @@ A Discord slash-command music bot built with `discord.js`, `discord-player`, `@d
 - Music player messages include buttons for previous, pause/resume, skip, and stop.
 - `/tts` can read user chat messages into a voice channel using Microsoft Edge TTS without a paid API key.
 - `/sawi` lets users ask Sawi questions through Groq's OpenAI-compatible chat API.
+- `/semangat` sends kata-kata semangat for today to hardcoded channel `1033107468936544332` using the `Asia/Jakarta` day.
 - Plain text `/play` searches default to YouTube, and `/searchsource` can switch a server to Spotify or automatic search.
 - Plain text `/play` searches show a top-result picker before queueing, while URLs and playlists still play directly.
 - Supports YouTube URLs/searches, YouTube Music URLs, Spotify track/album/playlist URLs, direct audio URLs, SoundCloud, Vimeo, Reverbnation, Spotify search, and Apple Music search where Discord Player can resolve playback.
@@ -227,7 +228,7 @@ You should see a log like:
 
 ```text
 Logged in as BotName#0000.
-Loaded 16 commands.
+Loaded 21 commands.
 ```
 
 ## Commands
@@ -246,10 +247,11 @@ Loaded 16 commands.
 - `/volume level:<0-100>` changes player volume.
 - `/tts enabled:<true|false> voice:<optional Edge TTS ShortName>` toggles automatic TTS for this text channel and your voice channel.
 - `/sawi question:<question>` asks Sawi a question.
+- `/semangat` sends today's motivation to hardcoded channel `1033107468936544332`.
 - `/stop` stops playback without leaving voice.
 - `/leave` stops playback and leaves voice. Only user ID `399562405249810433` can use it.
 
-Every command can also be used with the `?` prefix when Message Content Intent is enabled. Examples: `?play artist song name`, `?stop`, `?leave`, `?skip`, `?pause`, `?volume 75`, `?loop track`, `?autoplay off`, `?searchsource spotify`, and `?sawi hi sawi`.
+Every command can also be used with the `?` prefix when Message Content Intent is enabled. Examples: `?play artist song name`, `?stop`, `?leave`, `?skip`, `?pause`, `?volume 75`, `?loop track`, `?autoplay off`, `?searchsource spotify`, `?sawi hi sawi`, and `?semangat`.
 
 Examples:
 
@@ -263,6 +265,7 @@ Examples:
 /tts enabled:true voice:en-US-AriaNeural
 /tts enabled:false
 /sawi question:hi sawi, how should I relax tonight?
+/semangat
 ?play artist song name
 ?stop
 ?leave

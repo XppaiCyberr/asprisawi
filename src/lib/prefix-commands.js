@@ -28,6 +28,7 @@ const PREFIX_USAGE = {
   rank: '?rank [limit]',
   sawi: '?sawi <question>',
   searchsource: '?searchsource <youtube|spotify|auto>',
+  semangat: '?semangat',
   status: '?status',
   tts: '?tts [on|off] [voice]',
   volume: '?volume <0-100>'
